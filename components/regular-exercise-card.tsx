@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, History, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, History, ExternalLink, ChevronDown, ChevronUp, Pencil, Check } from 'lucide-react';
 import { getLastExerciseSets } from '@/lib/db';
 import type { ExerciseLog, SetLog, AlternativeExercise, RegularExerciseTargets } from '@/lib/types';
 
@@ -24,6 +24,7 @@ interface RegularExerciseCardProps {
   alternatives?: AlternativeExercise[];
   targets?: RegularExerciseTargets;
   programId?: string;
+  currentSessionId?: string;
   onUpdateLog: (log: ExerciseLog) => void;
 }
 
@@ -36,6 +37,7 @@ export function RegularExerciseCard({
   alternatives,
   targets,
   programId,
+  currentSessionId,
   onUpdateLog,
 }: RegularExerciseCardProps) {
   const [previousSets, setPreviousSets] = useState<PreviousSet[]>([]);
@@ -44,10 +46,13 @@ export function RegularExerciseCard({
   const [newSetReps, setNewSetReps] = useState('');
   const [exerciseNotes, setExerciseNotes] = useState(exerciseLog.notes || '');
   const [showAlternatives, setShowAlternatives] = useState(false);
+  const [editingSet, setEditingSet] = useState<number | null>(null);
+  const [editWeight, setEditWeight] = useState('');
+  const [editReps, setEditReps] = useState('');
 
   useEffect(() => {
     const loadPreviousData = async () => {
-      const data = await getLastExerciseSets(exerciseName, programId);
+      const data = await getLastExerciseSets(exerciseName, programId, currentSessionId);
       if (data) {
         setPreviousSets(data.sets);
         setPreviousNotes(data.exerciseNotes);
@@ -59,7 +64,7 @@ export function RegularExerciseCard({
       }
     };
     loadPreviousData();
-  }, [exerciseName, programId]);
+  }, [exerciseName, programId, currentSessionId]);
 
   const completedSets = exerciseLog.sets.filter(s => s.completed).length;
 
@@ -94,6 +99,35 @@ export function RegularExerciseCard({
       ...exerciseLog,
       sets: updatedSets,
     });
+  };
+
+  const startEditSet = (set: SetLog) => {
+    setEditingSet(set.setNumber);
+    setEditWeight(set.weight.toString());
+    setEditReps(set.reps.toString());
+  };
+
+  const saveEditSet = (setNumber: number) => {
+    const updatedSets = exerciseLog.sets.map(s =>
+      s.setNumber === setNumber
+        ? { ...s, weight: parseFloat(editWeight) || 0, reps: parseInt(editReps) || 0 }
+        : s
+    );
+
+    onUpdateLog({
+      ...exerciseLog,
+      sets: updatedSets,
+    });
+
+    setEditingSet(null);
+    setEditWeight('');
+    setEditReps('');
+  };
+
+  const cancelEditSet = () => {
+    setEditingSet(null);
+    setEditWeight('');
+    setEditReps('');
   };
 
   const updateNotes = (value: string) => {
@@ -230,18 +264,76 @@ export function RegularExerciseCard({
                 key={set.setNumber}
                 className="flex items-center justify-between p-2 bg-muted rounded-md"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium w-8">#{set.setNumber}</span>
-                  <span className="text-sm">{set.weight} kg</span>
-                  <span className="text-sm">× {set.reps} reps</span>
-                </div>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={() => removeSet(set.setNumber)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                {editingSet === set.setNumber ? (
+                  <>
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-sm font-medium w-8">#{set.setNumber}</span>
+                      <Input
+                        type="number"
+                        step="2.5"
+                        value={editWeight}
+                        onChange={(e) => setEditWeight(e.target.value)}
+                        className="h-8 w-20"
+                        autoFocus
+                      />
+                      <span className="text-sm text-muted-foreground">kg</span>
+                      <span className="text-muted-foreground">×</span>
+                      <Input
+                        type="number"
+                        value={editReps}
+                        onChange={(e) => setEditReps(e.target.value)}
+                        className="h-8 w-16"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEditSet(set.setNumber);
+                          if (e.key === 'Escape') cancelEditSet();
+                        }}
+                      />
+                      <span className="text-sm text-muted-foreground">reps</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => saveEditSet(set.setNumber)}
+                        className="text-green-600"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={cancelEditSet}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium w-8">#{set.setNumber}</span>
+                      <span className="text-sm">{set.weight} kg</span>
+                      <span className="text-sm">× {set.reps} reps</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => startEditSet(set)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => removeSet(set.setNumber)}
+                        className="text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

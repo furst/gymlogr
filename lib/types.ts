@@ -122,6 +122,7 @@ export interface UserSettings {
   id?: string;
   activeProgramId?: string;
   currentWeek?: number;
+  currentDay?: string; // Active day name within the current week
   weightIncrement: number; // Default 2.5 for kg
   unit: 'kg' | 'lb';
 }

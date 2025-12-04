@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Upload, Trash2, Check, AlertCircle, Pencil, X, Save } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Upload, Trash2, Check, AlertCircle, Pencil, X, Save, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ function processProgram(program: Program): Program {
 }
 
 export default function ProgramsPage() {
+  const router = useRouter();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [activeProgramId, setActiveProgramId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -224,6 +226,14 @@ export default function ProgramsPage() {
                         Set Active
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/programs/${program.id}/edit`)}
+                    >
+                      <Settings className="h-4 w-4 mr-1" />
+                      Edit Program
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"

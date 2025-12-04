@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Save, Dumbbell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,6 @@ export default function WorkoutPage() {
   const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(null);
   const [prescriptions, setPrescriptions] = useState<Record<string, SBSPrescription>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const loadWorkoutSession = useCallback(async (
     prog: Program,
@@ -88,7 +87,10 @@ export default function WorkoutPage() {
       // Get the current week's days
       const weekData = prog.weeks.find(w => w.week_number === week);
       if (weekData && weekData.days.length > 0) {
-        const dayName = weekData.days[0].name;
+        // Use saved day if it exists in this week, otherwise default to first day
+        const savedDay = settings.currentDay;
+        const dayExists = savedDay && weekData.days.some(d => d.name === savedDay);
+        const dayName = dayExists ? savedDay : weekData.days[0].name;
         setActiveDay(dayName);
 
         // Calculate SBS prescriptions for this week
@@ -121,26 +123,13 @@ export default function WorkoutPage() {
     loadData();
   }, [loadData]);
 
-  const handleSave = useCallback(async () => {
-    if (!workoutSession) return;
-
-    setSaving(true);
-    try {
-      await saveWorkoutSession(workoutSession);
-    } catch (err) {
-      console.error('Failed to save workout:', err);
-    } finally {
-      setSaving(false);
-    }
-  }, [workoutSession]);
-
   const handleDayChange = async (dayName: string) => {
     if (!program || !workoutSession) return;
 
-    // Save current session before switching
-    await handleSave();
-
     setActiveDay(dayName);
+    // Persist the active day to settings
+    await saveUserSettings({ currentDay: dayName });
+
     await loadWorkoutSession(
       program,
       workoutSession.programId,
@@ -155,16 +144,17 @@ export default function WorkoutPage() {
     const newWeek = Math.max(1, Math.min(currentWeek + delta, program.weeks.length));
     if (newWeek === currentWeek) return;
 
-    // Save current session before switching
-    await handleSave();
-
     setCurrentWeek(newWeek);
-    await saveUserSettings({ currentWeek: newWeek });
 
     const weekData = program.weeks.find(w => w.week_number === newWeek);
     if (weekData && weekData.days.length > 0) {
-      const dayName = weekData.days[0].name;
+      // Check if current day exists in new week, otherwise use first day
+      const dayExists = weekData.days.some(d => d.name === activeDay);
+      const dayName = dayExists ? activeDay : weekData.days[0].name;
       setActiveDay(dayName);
+
+      // Save both week and day
+      await saveUserSettings({ currentWeek: newWeek, currentDay: dayName });
 
       // Recalculate prescriptions for new week
       const settings = await getUserSettings();
@@ -187,17 +177,26 @@ export default function WorkoutPage() {
     }
   };
 
-  const handleUpdateExerciseLog = (exerciseId: string, log: ExerciseLog) => {
+  const handleUpdateExerciseLog = async (exerciseId: string, log: ExerciseLog) => {
     if (!workoutSession) return;
 
     const updatedExercises = workoutSession.exercises.map(ex =>
       ex.exerciseId === exerciseId ? log : ex
     );
 
-    setWorkoutSession({
+    const updatedSession = {
       ...workoutSession,
       exercises: updatedExercises,
-    });
+    };
+
+    setWorkoutSession(updatedSession);
+
+    // Auto-save the workout
+    try {
+      await saveWorkoutSession(updatedSession);
+    } catch (err) {
+      console.error('Failed to auto-save workout:', err);
+    }
   };
 
   if (loading) {
@@ -269,17 +268,11 @@ export default function WorkoutPage() {
           {weekData.days.map(day => (
             <TabsContent key={day.name} value={day.name} className="space-y-4 mt-4">
               {/* Stats bar */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{day.exercises.length} exercises</Badge>
-                  <Badge variant={totalCompletedSets > 0 ? 'default' : 'secondary'}>
-                    {totalCompletedSets} sets logged
-                  </Badge>
-                </div>
-                <Button onClick={handleSave} disabled={saving} size="sm">
-                  <Save className="h-4 w-4 mr-1" />
-                  {saving ? 'Saving...' : 'Save'}
-                </Button>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{day.exercises.length} exercises</Badge>
+                <Badge variant={totalCompletedSets > 0 ? 'default' : 'secondary'}>
+                  {totalCompletedSets} sets logged
+                </Badge>
               </div>
 
               {/* Exercise Cards */}
@@ -319,6 +312,7 @@ export default function WorkoutPage() {
                     alternatives={exercise.alternatives}
                     targets={exercise.targets}
                     programId={workoutSession?.programId}
+                    currentSessionId={workoutSession?.id}
                     onUpdateLog={(log) => handleUpdateExerciseLog(exercise.id!, log)}
                   />
                 );

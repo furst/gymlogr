@@ -114,9 +114,11 @@ export async function getRecentWorkoutSessions(limit: number = 10): Promise<Work
 
 // Get last logged data for a specific exercise (for regular exercises)
 // Returns all sets from the previous workout for this exercise
+// Excludes the current session to avoid showing today's data as "previous"
 export async function getLastExerciseSets(
   exerciseName: string,
-  programId?: string
+  programId?: string,
+  excludeSessionId?: string
 ): Promise<{ sets: Array<{ weight: number; reps: number; notes?: string }>; exerciseNotes?: string } | null> {
   const query = programId
     ? db.workoutSessions.where('programId').equals(programId)
@@ -125,6 +127,11 @@ export async function getLastExerciseSets(
   const sessions = await query.reverse().sortBy('date');
 
   for (const session of sessions) {
+    // Skip the current session
+    if (excludeSessionId && session.id === excludeSessionId) {
+      continue;
+    }
+
     for (const exercise of session.exercises) {
       if (exercise.exerciseName === exerciseName && exercise.sets.length > 0) {
         const completedSets = exercise.sets.filter(s => s.completed);

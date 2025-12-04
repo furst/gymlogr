@@ -1,0 +1,582 @@
+{
+  "name": "SBS + Jeff",
+  "description": "21-week hypertrophy program",
+  "settings": {
+    "maxes": {
+      "Squat": 115,
+      "Bench Press": 107.5,
+      "Deadlift": 170,
+      "OHP": 62.5,
+      "Close Grip Bench": 95,
+      "Incline Press": 85
+    },
+    "auxiliary_mapping": {
+      "Front Squat": "Squat",
+      "Incline Press": "Bench Press"
+    }
+  },
+  "weeks": [
+    {
+      "week_number": 1,
+      "days": [
+        {
+          "name": "Day 1",
+          "exercises": [
+            {
+              "name": "Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 0
+              },
+              "description": "Focus on depth, keep chest up"
+            },
+            {
+              "name": "Leg Press",
+              "type": "regular",
+              "description": "Use a controlled negative (don't free fall) and then explode on the positive.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Lean-back Lat Pulldown",
+              "type": "regular",
+              "description": "Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30° to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              },
+              "alternatives": [
+                {
+                  "name": "Pull-up",
+                  "link": "https://www.youtube.com/watch?v=GZbfZ033f74"
+                },
+                {
+                  "name": "Lean-Back Machine Pulldown"
+                }
+              ]
+            },
+            {
+              "name": "Standing Calf Raise",
+              "type": "regular",
+              "lastSetIntensity": "Static Stretch (30s)",
+              "description": "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-2"
+              }
+            },
+            {
+              "name": "Machine Crunch(BONUS)",
+              "type": "regular",
+              "description": "Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 2",
+          "exercises": [
+            {
+              "name": "Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 0
+              },
+              "description": ""
+            },
+            {
+              "name": "Chest-Supported Machine Row",
+              "type": "regular",
+              "description": "Flare elbows out at roughly 45° and squeeze your shoulder blades together hard at the top of each rep.",
+              "link": "youtube.com/watch?si=ADBJRkNSajLiVayN&v=ijsSiWSzYw0&feature=youtu.be",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-2"
+              }
+            },
+            {
+              "name": "Pec Deck",
+              "type": "regular",
+              "description": "Focus on bringing your elbows together - not your hands",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Triceps Pressdown(bar)",
+              "type": "regular",
+              "intensity": "Myo-reps",
+              "description": "Focus on squeezing your triceps to move the weight",
+              "targets": {
+                "sets": "3",
+                "reps": "15-20",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Bayesian Curl",
+              "type": "regular",
+              "description": "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm. Take the weaker arm to the listed RPE. Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower). If you don't have a size imbalance, do these both arms at the same time.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 3",
+          "exercises": [
+            {
+              "name": "Deadlift",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Deadlift",
+                "intensity_week_index": 0
+              },
+              "description": "Brace core, push through floor, hips and shoulders rise together",
+              "link": "https://www.youtube.com/watch?v=op9kVnSso6Q"
+            },
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Close Grip Bench",
+                "intensity_week_index": 0
+              }
+            },
+            {
+              "name": "Lying Leg Curl",
+              "type": "regular",
+              "lastSetIntensity": "Failure + LLPs (Extend set)",
+              "description": "Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl. ",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Back Extension",
+              "type": "regular",
+              "description": "Squeeze your glutes hard at the top of each rep. Slow controlled reps on the way down, followed by an explosive positive.",
+              "targets": {
+                "sets": "3",
+                "reps": "8-10",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 4",
+          "exercises": [
+            {
+              "name": "OHP",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 0
+              },
+              "description": "Strict press, no leg drive, full lockout",
+              "link": "https://www.youtube.com/watch?v=2yjwXTZQDDI"
+            },
+            {
+              "name": "Single-Arm DB Row",
+              "type": "regular",
+              "lastSetIntensity": "Failure + LLPs (Extend set)",
+              "description": "Flare your elbows out ~45°. Smooth, controlled reps.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Cable Lateral Raise",
+              "type": "regular",
+              "lastSetIntensity": "Myo-reps",
+              "description": "Focus on squeezing your lateral delt to move the weight.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Face Pulls",
+              "type": "regular",
+              "description": "Focus on squeezing your face pulls to move the weight.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "EZ Bar Skull Crusher",
+              "type": "regular",
+              "description": "Optionally pause for 0.5-1 second in the stretched aspect of each rep",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 5",
+          "exercises": [
+            {
+              "name": "Incline Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Incline Press",
+                "intensity_week_index": 0
+              },
+              "description": "45 degree angle, control the descent"
+            },
+            {
+              "name": "Dual-Handle Lat Pulldown",
+              "type": "regular",
+              "description": "Lean back by ~15° and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Hammer Curl",
+              "type": "regular",
+              "description": "Squeeze the rope hard as you curl the weight up. Smooth, controlled reps.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "DB concentration curl(BONUS)",
+              "type": "regular",
+              "lastSetIntensity": "Myo-reps",
+              "description": "Smooth, controlled reps. Mind-muscle connection with the biceps.",
+              "targets": {
+                "sets": "3",
+                "reps": "15-20",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Ab Wheel Rollout",
+              "type": "regular",
+              "description": "Don't just bend at your hips, use your abs to lower yourself down under control and pull yourself back up. If you don't have the core strength to get all the way extended at the bottom, try to progressively increase the ROM week to week.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week_number": 2,
+      "days": [
+        {
+          "name": "Day 1",
+          "exercises": [
+            {
+              "name": "Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 1
+              },
+              "description": "Focus on depth, keep chest up"
+            },
+            {
+              "name": "Leg Press",
+              "type": "regular",
+              "description": "Use a controlled negative (don't free fall) and then explode on the positive.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Lean-back Lat Pulldown",
+              "type": "regular",
+              "description": "Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30° to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              },
+              "alternatives": [
+                {
+                  "name": "Pull-up",
+                  "link": "https://www.youtube.com/watch?v=GZbfZ033f74"
+                },
+                {
+                  "name": "Lean-Back Machine Pulldown"
+                }
+              ]
+            },
+            {
+              "name": "Standing Calf Raise",
+              "type": "regular",
+              "lastSetIntensity": "Static Stretch (30s)",
+              "description": "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-2"
+              }
+            },
+            {
+              "name": "Machine Crunch(BONUS)",
+              "type": "regular",
+              "description": "Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 2",
+          "exercises": [
+            {
+              "name": "Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 1
+              },
+              "description": ""
+            },
+            {
+              "name": "Chest-Supported Machine Row",
+              "type": "regular",
+              "description": "Flare elbows out at roughly 45° and squeeze your shoulder blades together hard at the top of each rep.",
+              "link": "youtube.com/watch?si=ADBJRkNSajLiVayN&v=ijsSiWSzYw0&feature=youtu.be",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-2"
+              }
+            },
+            {
+              "name": "Pec Deck",
+              "type": "regular",
+              "description": "Focus on bringing your elbows together - not your hands",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Triceps Pressdown(bar)",
+              "type": "regular",
+              "intensity": "Myo-reps",
+              "description": "Focus on squeezing your triceps to move the weight",
+              "targets": {
+                "sets": "3",
+                "reps": "15-20",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Bayesian Curl",
+              "type": "regular",
+              "description": "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm. Take the weaker arm to the listed RPE. Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower). If you don't have a size imbalance, do these both arms at the same time.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 3",
+          "exercises": [
+            {
+              "name": "Deadlift",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Deadlift",
+                "intensity_week_index": 1
+              },
+              "description": "Brace core, push through floor, hips and shoulders rise together",
+              "link": "https://www.youtube.com/watch?v=op9kVnSso6Q"
+            },
+            {
+              "name": "Close-Grip Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Close Grip Bench",
+                "intensity_week_index": 1
+              }
+            },
+            {
+              "name": "Lying Leg Curl",
+              "type": "regular",
+              "lastSetIntensity": "Failure + LLPs (Extend set)",
+              "description": "Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl. ",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Back Extension",
+              "type": "regular",
+              "description": "Squeeze your glutes hard at the top of each rep. Slow controlled reps on the way down, followed by an explosive positive.",
+              "targets": {
+                "sets": "3",
+                "reps": "8-10",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 4",
+          "exercises": [
+            {
+              "name": "OHP",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 1
+              },
+              "description": "Strict press, no leg drive, full lockout",
+              "link": "https://www.youtube.com/watch?v=2yjwXTZQDDI"
+            },
+            {
+              "name": "Single-Arm DB Row",
+              "type": "regular",
+              "lastSetIntensity": "Failure + LLPs (Extend set)",
+              "description": "Flare your elbows out ~45°. Smooth, controlled reps.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Cable Lateral Raise",
+              "type": "regular",
+              "lastSetIntensity": "Myo-reps",
+              "description": "Focus on squeezing your lateral delt to move the weight.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Face Pulls",
+              "type": "regular",
+              "description": "Focus on squeezing your face pulls to move the weight.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "EZ Bar Skull Crusher",
+              "type": "regular",
+              "description": "Optionally pause for 0.5-1 second in the stretched aspect of each rep",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 5",
+          "exercises": [
+            {
+              "name": "Incline Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Incline Press",
+                "intensity_week_index": 1
+              },
+              "description": "45 degree angle, control the descent"
+            },
+            {
+              "name": "Dual-Handle Lat Pulldown",
+              "type": "regular",
+              "description": "Lean back by ~15° and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1-2"
+              }
+            },
+            {
+              "name": "Hammer Curl",
+              "type": "regular",
+              "description": "Squeeze the rope hard as you curl the weight up. Smooth, controlled reps.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "DB concentration curl(BONUS)",
+              "type": "regular",
+              "lastSetIntensity": "Myo-reps",
+              "description": "Smooth, controlled reps. Mind-muscle connection with the biceps.",
+              "targets": {
+                "sets": "3",
+                "reps": "15-20",
+                "rir": "0-1"
+              }
+            },
+            {
+              "name": "Ab Wheel Rollout",
+              "type": "regular",
+              "description": "Don't just bend at your hips, use your abs to lower yourself down under control and pull yourself back up. If you don't have the core strength to get all the way extended at the bottom, try to progressively increase the ROM week to week.",
+              "targets": {
+                "sets": "3",
+                "reps": "12-15",
+                "rir": "0-1"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

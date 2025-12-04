@@ -1,0 +1,592 @@
+{
+  "name": "SBS Hypertrophy Template 3",
+  "description": "21-week hypertrophy program",
+  "settings": {
+    "maxes": {
+      "Squat": 200,
+      "Bench Press": 107.5,
+      "Deadlift": 220,
+      "OHP": 90
+    },
+    "auxiliary_mapping": {
+      "Front Squat": "Squat",
+      "Incline Press": "Bench Press",
+      "Push Press": "OHP",
+      "Close Grip Bench": "Bench Press"
+    }
+  },
+  "weeks": [
+    {
+      "week_number": 1,
+      "days": [
+        {
+          "name": "Day 1",
+          "exercises": [
+            {
+              "id": "ex_1",
+              "name": "Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 0
+              },
+              "description": "Focus on depth, keep chest up",
+              "link": "https://www.youtube.com/watch?v=ultWZbUMPL8"
+            },
+            {
+              "id": "ex_2",
+              "name": "Push Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 0
+              },
+              "description": "Use leg drive, lock out overhead",
+              "link": "https://www.youtube.com/watch?v=X6-DMh-t4nQ"
+            },
+            {
+              "id": "ex_5",
+              "name": "Barbell Row",
+              "type": "regular",
+              "description": "Squeeze shoulder blades at top, control the negative",
+              "link": "https://www.youtube.com/watch?v=FWJR5Ve8bnQ",
+              "alternatives": [
+                {
+                  "name": "Cable Row",
+                  "link": "https://www.youtube.com/watch?v=GZbfZ033f74"
+                },
+                {
+                  "name": "Chest Supported Row"
+                }
+              ]
+            },
+            {
+              "id": "ex_6",
+              "name": "Leg Curl",
+              "type": "regular",
+              "description": "Control the eccentric, full range of motion",
+              "alternatives": [
+                {
+                  "name": "Nordic Curl",
+                  "link": "https://www.youtube.com/watch?v=d8AAPcYxHE0"
+                },
+                {
+                  "name": "Romanian Deadlift"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 2",
+          "exercises": [
+            {
+              "id": "ex_3",
+              "name": "Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 0
+              },
+              "description": "Arch back, retract scapula, leg drive",
+              "link": "https://www.youtube.com/watch?v=rT7DgCr-3pg"
+            },
+            {
+              "id": "ex_4",
+              "name": "Close Grip Bench",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Close Grip Bench",
+                "intensity_week_index": 0
+              },
+              "description": "Hands shoulder width, elbows tucked"
+            },
+            {
+              "id": "ex_7",
+              "name": "Lat Pulldown",
+              "type": "regular",
+              "description": "Pull to upper chest, squeeze lats at bottom",
+              "link": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
+              "alternatives": [
+                {
+                  "name": "Pull-ups",
+                  "link": "https://www.youtube.com/watch?v=eGo4IYlbE5g"
+                },
+                {
+                  "name": "Assisted Pull-ups"
+                }
+              ]
+            },
+            {
+              "id": "ex_8",
+              "name": "Tricep Pushdown",
+              "type": "regular",
+              "description": "Keep elbows pinned, full extension",
+              "alternatives": [
+                {
+                  "name": "Overhead Tricep Extension"
+                },
+                {
+                  "name": "Skull Crushers"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 3",
+          "exercises": [
+            {
+              "id": "ex_9",
+              "name": "Deadlift",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Deadlift",
+                "intensity_week_index": 0
+              },
+              "description": "Brace core, push through floor, hips and shoulders rise together",
+              "link": "https://www.youtube.com/watch?v=op9kVnSso6Q"
+            },
+            {
+              "id": "ex_10",
+              "name": "Front Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 0
+              },
+              "description": "Elbows high, stay upright",
+              "link": "https://www.youtube.com/watch?v=m4ytaCJZpl0"
+            },
+            {
+              "id": "ex_11",
+              "name": "Face Pull",
+              "type": "regular",
+              "description": "Pull to face, externally rotate at end",
+              "link": "https://www.youtube.com/watch?v=rep-qVOkqgk",
+              "alternatives": [
+                {
+                  "name": "Band Pull-apart"
+                },
+                {
+                  "name": "Reverse Fly"
+                }
+              ]
+            },
+            {
+              "id": "ex_12",
+              "name": "Calf Raise",
+              "type": "regular",
+              "description": "Full stretch at bottom, pause at top",
+              "alternatives": [
+                {
+                  "name": "Seated Calf Raise"
+                },
+                {
+                  "name": "Leg Press Calf Raise"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 4",
+          "exercises": [
+            {
+              "id": "ex_13",
+              "name": "OHP",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 0
+              },
+              "description": "Strict press, no leg drive, full lockout",
+              "link": "https://www.youtube.com/watch?v=2yjwXTZQDDI"
+            },
+            {
+              "id": "ex_14",
+              "name": "Incline Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 0
+              },
+              "description": "30-45 degree angle, control the descent"
+            },
+            {
+              "id": "ex_15",
+              "name": "Dumbbell Row",
+              "type": "regular",
+              "description": "Support on bench, pull to hip",
+              "link": "https://www.youtube.com/watch?v=roCP6wCXPqo",
+              "alternatives": [
+                {
+                  "name": "Meadows Row"
+                },
+                {
+                  "name": "Seal Row"
+                }
+              ]
+            },
+            {
+              "id": "ex_16",
+              "name": "Bicep Curl",
+              "type": "regular",
+              "description": "No swinging, full range of motion",
+              "alternatives": [
+                {
+                  "name": "Hammer Curl"
+                },
+                {
+                  "name": "Cable Curl"
+                },
+                {
+                  "name": "Preacher Curl"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 5",
+          "exercises": [
+            {
+              "id": "ex_17",
+              "name": "Lateral Raise",
+              "type": "regular",
+              "description": "Slight bend in elbows, control the descent",
+              "link": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+              "alternatives": [
+                {
+                  "name": "Cable Lateral Raise",
+                  "link": "https://www.youtube.com/watch?v=PPrzBWZDOhA"
+                },
+                {
+                  "name": "Machine Lateral Raise"
+                }
+              ]
+            },
+            {
+              "id": "ex_18",
+              "name": "Leg Extension",
+              "type": "regular",
+              "description": "Squeeze quads at top, slow negative",
+              "alternatives": [
+                {
+                  "name": "Bulgarian Split Squat"
+                },
+                {
+                  "name": "Lunges"
+                }
+              ]
+            },
+            {
+              "id": "ex_19",
+              "name": "Ab Wheel Rollout",
+              "type": "regular",
+              "description": "Keep core tight, don't let hips sag",
+              "link": "https://www.youtube.com/watch?v=rqiTPVjlhsg",
+              "alternatives": [
+                {
+                  "name": "Hanging Leg Raise"
+                },
+                {
+                  "name": "Cable Crunch"
+                },
+                {
+                  "name": "Plank"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week_number": 2,
+      "days": [
+        {
+          "name": "Day 1",
+          "exercises": [
+            {
+              "id": "ex_1",
+              "name": "Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 1
+              },
+              "description": "Focus on depth, keep chest up",
+              "link": "https://www.youtube.com/watch?v=ultWZbUMPL8"
+            },
+            {
+              "id": "ex_2",
+              "name": "Push Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 1
+              },
+              "description": "Use leg drive, lock out overhead",
+              "link": "https://www.youtube.com/watch?v=X6-DMh-t4nQ"
+            },
+            {
+              "id": "ex_5",
+              "name": "Barbell Row",
+              "type": "regular",
+              "description": "Squeeze shoulder blades at top, control the negative",
+              "link": "https://www.youtube.com/watch?v=FWJR5Ve8bnQ",
+              "alternatives": [
+                {
+                  "name": "Cable Row",
+                  "link": "https://www.youtube.com/watch?v=GZbfZ033f74"
+                },
+                {
+                  "name": "Chest Supported Row"
+                }
+              ]
+            },
+            {
+              "id": "ex_6",
+              "name": "Leg Curl",
+              "type": "regular",
+              "description": "Control the eccentric, full range of motion",
+              "alternatives": [
+                {
+                  "name": "Nordic Curl",
+                  "link": "https://www.youtube.com/watch?v=d8AAPcYxHE0"
+                },
+                {
+                  "name": "Romanian Deadlift"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 2",
+          "exercises": [
+            {
+              "id": "ex_3",
+              "name": "Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 1
+              },
+              "description": "Arch back, retract scapula, leg drive",
+              "link": "https://www.youtube.com/watch?v=rT7DgCr-3pg"
+            },
+            {
+              "id": "ex_4",
+              "name": "Close Grip Bench",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Close Grip Bench",
+                "intensity_week_index": 1
+              },
+              "description": "Hands shoulder width, elbows tucked"
+            },
+            {
+              "id": "ex_7",
+              "name": "Lat Pulldown",
+              "type": "regular",
+              "description": "Pull to upper chest, squeeze lats at bottom",
+              "link": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
+              "alternatives": [
+                {
+                  "name": "Pull-ups",
+                  "link": "https://www.youtube.com/watch?v=eGo4IYlbE5g"
+                },
+                {
+                  "name": "Assisted Pull-ups"
+                }
+              ]
+            },
+            {
+              "id": "ex_8",
+              "name": "Tricep Pushdown",
+              "type": "regular",
+              "description": "Keep elbows pinned, full extension",
+              "alternatives": [
+                {
+                  "name": "Overhead Tricep Extension"
+                },
+                {
+                  "name": "Skull Crushers"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 3",
+          "exercises": [
+            {
+              "id": "ex_9",
+              "name": "Deadlift",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Deadlift",
+                "intensity_week_index": 1
+              },
+              "description": "Brace core, push through floor, hips and shoulders rise together",
+              "link": "https://www.youtube.com/watch?v=op9kVnSso6Q"
+            },
+            {
+              "id": "ex_10",
+              "name": "Front Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 1
+              },
+              "description": "Elbows high, stay upright",
+              "link": "https://www.youtube.com/watch?v=m4ytaCJZpl0"
+            },
+            {
+              "id": "ex_11",
+              "name": "Face Pull",
+              "type": "regular",
+              "description": "Pull to face, externally rotate at end",
+              "link": "https://www.youtube.com/watch?v=rep-qVOkqgk",
+              "alternatives": [
+                {
+                  "name": "Band Pull-apart"
+                },
+                {
+                  "name": "Reverse Fly"
+                }
+              ]
+            },
+            {
+              "id": "ex_12",
+              "name": "Calf Raise",
+              "type": "regular",
+              "description": "Full stretch at bottom, pause at top",
+              "alternatives": [
+                {
+                  "name": "Seated Calf Raise"
+                },
+                {
+                  "name": "Leg Press Calf Raise"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 4",
+          "exercises": [
+            {
+              "id": "ex_13",
+              "name": "OHP",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 1
+              },
+              "description": "Strict press, no leg drive, full lockout",
+              "link": "https://www.youtube.com/watch?v=2yjwXTZQDDI"
+            },
+            {
+              "id": "ex_14",
+              "name": "Incline Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 1
+              },
+              "description": "30-45 degree angle, control the descent"
+            },
+            {
+              "id": "ex_15",
+              "name": "Dumbbell Row",
+              "type": "regular",
+              "description": "Support on bench, pull to hip",
+              "link": "https://www.youtube.com/watch?v=roCP6wCXPqo",
+              "alternatives": [
+                {
+                  "name": "Meadows Row"
+                },
+                {
+                  "name": "Seal Row"
+                }
+              ]
+            },
+            {
+              "id": "ex_16",
+              "name": "Bicep Curl",
+              "type": "regular",
+              "description": "No swinging, full range of motion",
+              "alternatives": [
+                {
+                  "name": "Hammer Curl"
+                },
+                {
+                  "name": "Cable Curl"
+                },
+                {
+                  "name": "Preacher Curl"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Day 5",
+          "exercises": [
+            {
+              "id": "ex_17",
+              "name": "Lateral Raise",
+              "type": "regular",
+              "description": "Slight bend in elbows, control the descent",
+              "link": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+              "alternatives": [
+                {
+                  "name": "Cable Lateral Raise",
+                  "link": "https://www.youtube.com/watch?v=PPrzBWZDOhA"
+                },
+                {
+                  "name": "Machine Lateral Raise"
+                }
+              ]
+            },
+            {
+              "id": "ex_18",
+              "name": "Leg Extension",
+              "type": "regular",
+              "description": "Squeeze quads at top, slow negative",
+              "alternatives": [
+                {
+                  "name": "Bulgarian Split Squat"
+                },
+                {
+                  "name": "Lunges"
+                }
+              ]
+            },
+            {
+              "id": "ex_19",
+              "name": "Ab Wheel Rollout",
+              "type": "regular",
+              "description": "Keep core tight, don't let hips sag",
+              "link": "https://www.youtube.com/watch?v=rqiTPVjlhsg",
+              "alternatives": [
+                {
+                  "name": "Hanging Leg Raise"
+                },
+                {
+                  "name": "Cable Crunch"
+                },
+                {
+                  "name": "Plank"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

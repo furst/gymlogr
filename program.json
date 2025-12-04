@@ -1,0 +1,136 @@
+{
+  "name": "SBS Hypertrophy Template",
+  "description": "21-week hypertrophy program",
+  "settings": {
+    "maxes": {
+      "Squat": 200,
+      "Bench Press": 107.5,
+      "Deadlift": 220,
+      "OHP": 90,
+      "Close Grip Bench": 95,
+      "Incline Press": 85
+    },
+    "auxiliary_mapping": {
+      "Front Squat": "Squat",
+      "Push Press": "OHP"
+    }
+  },
+  "weeks": [
+    {
+      "week_number": 1,
+      "days": [
+        {
+          "name": "Day 1",
+          "exercises": [
+            {
+              "name": "Squat",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Squat",
+                "intensity_week_index": 0
+              },
+              "description": "Focus on depth, keep chest up",
+              "link": "https://www.youtube.com/watch?v=ultWZbUMPL8"
+            },
+            {
+              "name": "Push Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "OHP",
+                "intensity_week_index": 0
+              },
+              "description": "Use leg drive, lock out overhead"
+            },
+            {
+              "name": "Barbell Row",
+              "type": "regular",
+              "description": "Squeeze shoulder blades at top",
+              "targets": {
+                "sets": "3",
+                "reps": "8-12",
+                "rir": "2"
+              },
+              "alternatives": [
+                { "name": "Cable Row" },
+                { "name": "Chest Supported Row" }
+              ]
+            },
+            {
+              "name": "Leg Curl",
+              "type": "regular",
+              "lastSetIntensity": "Drop set",
+              "description": "Control the eccentric",
+              "targets": {
+                "sets": "3",
+                "reps": "10-12",
+                "rir": "1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Day 2",
+          "exercises": [
+            {
+              "name": "Bench Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Bench Press",
+                "intensity_week_index": 0
+              },
+              "description": "Arch back, retract scapula"
+            },
+            {
+              "name": "Close Grip Bench",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Close Grip Bench",
+                "intensity_week_index": 0
+              },
+              "description": "Hands shoulder width, elbows tucked"
+            },
+            {
+              "name": "Incline Press",
+              "type": "sbs",
+              "sbs_config": {
+                "lift_key": "Incline Press",
+                "intensity_week_index": 0
+              },
+              "description": "30-45 degree angle"
+            },
+            {
+              "name": "Lat Pulldown",
+              "type": "regular",
+              "description": "Pull to upper chest, squeeze lats",
+              "targets": {
+                "sets": "3-4",
+                "reps": "10-15",
+                "rir": "2"
+              },
+              "alternatives": [
+                { "name": "Pull-ups" },
+                { "name": "Assisted Pull-ups" }
+              ]
+            },
+            {
+              "name": "Lateral Raise",
+              "type": "regular",
+              "lastSetIntensity": "Myo-reps",
+              "description": "Slight bend in elbows, control descent",
+              "targets": {
+                "sets": "3",
+                "reps": "15-20",
+                "rir": "1-2"
+              },
+              "link": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+              "alternatives": [
+                { "name": "Cable Lateral Raise" },
+                { "name": "Machine Lateral Raise" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

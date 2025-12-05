@@ -50,6 +50,7 @@ export function SBSExerciseCard({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const prevSetsRef = useRef(setsCompleted);
+  const notesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const setGoalLogic = getSetsPerWeekLogic(prescription.liftKey);
   const setGoalMin = setGoalLogic.default_range.min;
@@ -88,11 +89,29 @@ export function SBSExerciseCard({
 
   const updateNotes = (value: string) => {
     setExerciseNotes(value);
-    onUpdateLog({
-      ...exerciseLog,
-      notes: value,
-    });
+
+    // Clear any pending save timeout
+    if (notesSaveTimeoutRef.current) {
+      clearTimeout(notesSaveTimeoutRef.current);
+    }
+
+    // Debounce the save - wait 300ms after last keystroke
+    notesSaveTimeoutRef.current = setTimeout(() => {
+      onUpdateLog({
+        ...exerciseLog,
+        notes: value,
+      });
+    }, 300);
   };
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (notesSaveTimeoutRef.current) {
+        clearTimeout(notesSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Determine status based on sets completed vs goal
   const getSetStatus = () => {

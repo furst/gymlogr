@@ -119,11 +119,12 @@ export async function getRecentWorkoutSessions(
 
 // Get last logged data for a specific exercise (for regular exercises)
 // Returns all sets from the previous workout for this exercise
-// Excludes the current session to avoid showing today's data as "previous"
+// Excludes the current week+day to avoid showing today's data as "previous"
 export async function getLastExerciseSets(
   exerciseName: string,
   programId?: string,
-  excludeSessionId?: string
+  excludeWeekNumber?: number,
+  excludeDayName?: string
 ): Promise<{
   sets: Array<{ weight: number; reps: number; notes?: string }>;
   exerciseNotes?: string;
@@ -135,8 +136,13 @@ export async function getLastExerciseSets(
   const sessions = await query.reverse().sortBy("date");
 
   for (const session of sessions) {
-    // Skip the current session
-    if (excludeSessionId && session.id === excludeSessionId) {
+    // Skip the current week+day (more reliable than session ID for new sessions)
+    if (
+      excludeWeekNumber !== undefined &&
+      excludeDayName !== undefined &&
+      session.weekNumber === excludeWeekNumber &&
+      session.dayName === excludeDayName
+    ) {
       continue;
     }
 

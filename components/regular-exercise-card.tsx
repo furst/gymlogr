@@ -40,7 +40,8 @@ interface RegularExerciseCardProps {
   alternatives?: AlternativeExercise[];
   targets?: RegularExerciseTargets;
   programId?: string;
-  currentSessionId?: string;
+  weekNumber?: number;
+  dayName?: string;
   onUpdateLog: (log: ExerciseLog) => void;
   index?: number; // For staggered animation
 }
@@ -54,7 +55,8 @@ export function RegularExerciseCard({
   alternatives,
   targets,
   programId,
-  currentSessionId,
+  weekNumber,
+  dayName,
   onUpdateLog,
   index = 0,
 }: RegularExerciseCardProps) {
@@ -71,13 +73,15 @@ export function RegularExerciseCard({
   const [removingSet, setRemovingSet] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const prevSetsCountRef = useRef(exerciseLog.sets.length);
+  const notesSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadPreviousData = async () => {
       const data = await getLastExerciseSets(
         exerciseName,
         programId,
-        currentSessionId
+        weekNumber,
+        dayName
       );
       if (data) {
         setPreviousSets(data.sets);
@@ -89,7 +93,7 @@ export function RegularExerciseCard({
       }
     };
     loadPreviousData();
-  }, [exerciseName, programId, currentSessionId]);
+  }, [exerciseName, programId, weekNumber, dayName]);
 
   // Track set count changes for success animation
   useEffect(() => {
@@ -104,6 +108,15 @@ export function RegularExerciseCard({
 
     prevSetsCountRef.current = currentCount;
   }, [exerciseLog.sets, targets?.sets]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (notesSaveTimeoutRef.current) {
+        clearTimeout(notesSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const completedSets = exerciseLog.sets.filter((s) => s.completed).length;
   const targetSets = targets?.sets ? parseInt(targets.sets) : null;
@@ -187,10 +200,19 @@ export function RegularExerciseCard({
 
   const updateNotes = (value: string) => {
     setExerciseNotes(value);
-    onUpdateLog({
-      ...exerciseLog,
-      notes: value,
-    });
+
+    // Clear any pending save timeout
+    if (notesSaveTimeoutRef.current) {
+      clearTimeout(notesSaveTimeoutRef.current);
+    }
+
+    // Debounce the save - wait 300ms after last keystroke
+    notesSaveTimeoutRef.current = setTimeout(() => {
+      onUpdateLog({
+        ...exerciseLog,
+        notes: value,
+      });
+    }, 300);
   };
 
   const hasTargets = targets && (targets.sets || targets.reps || targets.rir);

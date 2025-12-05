@@ -42,6 +42,8 @@ export default function WorkoutPage() {
   const [contentKey, setContentKey] = useState(0); // For triggering re-animation
   const prevWeekRef = useRef(currentWeek);
   const [previousComment, setPreviousComment] = useState<string | null>(null);
+  const commentSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingCommentSaveRef = useRef<(() => Promise<void>) | null>(null);
 
   const loadWorkoutSession = useCallback(
     async (
@@ -171,6 +173,9 @@ export default function WorkoutPage() {
   const handleDayChange = async (dayName: string) => {
     if (!program || !workoutSession) return;
 
+    // Flush any pending comment save before navigating
+    await flushPendingCommentSave();
+
     // Trigger content re-animation
     setContentKey((prev) => prev + 1);
     setActiveDay(dayName);
@@ -192,6 +197,9 @@ export default function WorkoutPage() {
       Math.min(currentWeek + delta, program.weeks.length)
     );
     if (newWeek === currentWeek) return;
+
+    // Flush any pending comment save before navigating
+    await flushPendingCommentSave();
 
     setCurrentWeek(newWeek);
 
@@ -243,16 +251,18 @@ export default function WorkoutPage() {
       exercises: updatedExercises,
     };
 
-    setWorkoutSession(updatedSession);
-
     try {
-      await saveWorkoutSession(updatedSession);
+      const savedId = await saveWorkoutSession(updatedSession);
+      // Update local state with the returned ID to ensure subsequent saves update the same record
+      setWorkoutSession({ ...updatedSession, id: savedId });
     } catch (err) {
       console.error("Failed to auto-save workout:", err);
+      // Still update local state even if save fails, but without ID
+      setWorkoutSession(updatedSession);
     }
   };
 
-  const handleCommentChange = async (comment: string) => {
+  const handleCommentChange = (comment: string) => {
     if (!workoutSession) return;
 
     const updatedSession = {
@@ -260,12 +270,40 @@ export default function WorkoutPage() {
       comment,
     };
 
+    // Update local state immediately for responsive UI
     setWorkoutSession(updatedSession);
 
-    try {
-      await saveWorkoutSession(updatedSession);
-    } catch (err) {
-      console.error("Failed to save comment:", err);
+    // Clear any pending save timeout
+    if (commentSaveTimeoutRef.current) {
+      clearTimeout(commentSaveTimeoutRef.current);
+    }
+
+    // Store the save function so we can flush it on navigation
+    const saveFunction = async () => {
+      try {
+        const savedId = await saveWorkoutSession(updatedSession);
+        // Update local state with the returned ID to ensure subsequent saves update the same record
+        setWorkoutSession((prev) => (prev ? { ...prev, id: savedId } : null));
+      } catch (err) {
+        console.error("Failed to save comment:", err);
+      }
+      pendingCommentSaveRef.current = null;
+    };
+
+    pendingCommentSaveRef.current = saveFunction;
+
+    // Debounce the save - wait 300ms after last keystroke
+    commentSaveTimeoutRef.current = setTimeout(saveFunction, 300);
+  };
+
+  // Flush any pending comment save (call before navigation)
+  const flushPendingCommentSave = async () => {
+    if (commentSaveTimeoutRef.current) {
+      clearTimeout(commentSaveTimeoutRef.current);
+      commentSaveTimeoutRef.current = null;
+    }
+    if (pendingCommentSaveRef.current) {
+      await pendingCommentSaveRef.current();
     }
   };
 
@@ -435,7 +473,8 @@ export default function WorkoutPage() {
                       alternatives={exercise.alternatives}
                       targets={exercise.targets}
                       programId={workoutSession?.programId}
-                      currentSessionId={workoutSession?.id}
+                      weekNumber={currentWeek}
+                      dayName={activeDay}
                       onUpdateLog={(log) =>
                         handleUpdateExerciseLog(exercise.id!, log)
                       }

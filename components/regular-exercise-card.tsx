@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { NumberStepper } from "@/components/ui/number-stepper";
 import {
   Plus,
   X,
@@ -379,54 +380,51 @@ export function RegularExerciseCard({
                 )}
               >
                 {editingSet === set.setNumber ? (
-                  <>
-                    <div className="flex items-center gap-2 flex-1">
-                      <span className="text-sm font-medium w-8 tabular-nums">
-                        #{set.setNumber}
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium tabular-nums">
+                        Set #{set.setNumber}
                       </span>
-                      <Input
-                        type="number"
-                        step="2.5"
+                      <div className="flex gap-1">
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          onClick={() => saveEditSet(set.setNumber)}
+                          className="text-green-600 hover:text-green-600 hover:bg-green-500/10 press-effect"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          onClick={cancelEditSet}
+                          className="press-effect"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <NumberStepper
                         value={editWeight}
-                        onChange={(e) => setEditWeight(e.target.value)}
-                        className="h-8 w-20 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                        onChange={setEditWeight}
+                        step={0.5}
+                        min={0}
+                        unit="kg"
                         autoFocus
                       />
-                      <span className="text-sm text-muted-foreground">kg</span>
-                      <span className="text-muted-foreground">×</span>
-                      <Input
-                        type="number"
+                      <NumberStepper
                         value={editReps}
-                        onChange={(e) => setEditReps(e.target.value)}
-                        className="h-8 w-16 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                        onChange={setEditReps}
+                        step={1}
+                        min={0}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") saveEditSet(set.setNumber);
                           if (e.key === "Escape") cancelEditSet();
                         }}
                       />
-                      <span className="text-sm text-muted-foreground">
-                        reps
-                      </span>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => saveEditSet(set.setNumber)}
-                        className="text-green-600 hover:text-green-600 hover:bg-green-500/10 press-effect"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={cancelEditSet}
-                        className="press-effect"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <div className="flex items-center gap-4">
@@ -467,38 +465,32 @@ export function RegularExerciseCard({
 
         {/* Add New Set */}
         <div className="space-y-3 pt-2 border-t">
-          <div className="flex items-end gap-2">
-            <div className="flex-1 space-y-1">
-              <label className="text-xs text-muted-foreground">
-                Weight (kg)
-              </label>
-              <Input
-                type="number"
-                step="2.5"
-                value={newSetWeight}
-                onChange={(e) => setNewSetWeight(e.target.value)}
-                placeholder={previousSets[0]?.weight.toString() || "0"}
-                className="h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div className="flex-1 space-y-1">
-              <label className="text-xs text-muted-foreground">Reps</label>
-              <Input
-                type="number"
-                value={newSetReps}
-                onChange={(e) => setNewSetReps(e.target.value)}
-                placeholder={previousSets[0]?.reps.toString() || "0"}
-                className="h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") addSet();
-                }}
-              />
-            </div>
-            <Button onClick={addSet} size="sm" className="press-effect">
-              <Plus className="h-4 w-4 mr-1" />
-              Add Set
-            </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <NumberStepper
+              value={newSetWeight}
+              onChange={setNewSetWeight}
+              step={0.5}
+              min={0}
+              placeholder={previousSets[0]?.weight.toString() || "0"}
+              label="Weight (kg)"
+              unit="kg"
+            />
+            <NumberStepper
+              value={newSetReps}
+              onChange={setNewSetReps}
+              step={1}
+              min={0}
+              placeholder={previousSets[0]?.reps.toString() || "0"}
+              label="Reps"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addSet();
+              }}
+            />
           </div>
+          <Button onClick={addSet} size="sm" className="w-full press-effect">
+            <Plus className="h-4 w-4 mr-1" />
+            Add Set
+          </Button>
 
           {/* Notes Input */}
           <div className="space-y-1">

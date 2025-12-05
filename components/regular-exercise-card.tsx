@@ -1,13 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X, History, ExternalLink, ChevronDown, ChevronUp, Pencil, Check } from 'lucide-react';
-import { getLastExerciseSets } from '@/lib/db';
-import type { ExerciseLog, SetLog, AlternativeExercise, RegularExerciseTargets } from '@/lib/types';
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Plus,
+  X,
+  History,
+  ExternalLink,
+  ChevronDown,
+  Pencil,
+  Check,
+} from "lucide-react";
+import { getLastExerciseSets } from "@/lib/db";
+import type {
+  ExerciseLog,
+  SetLog,
+  AlternativeExercise,
+  RegularExerciseTargets,
+} from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface PreviousSet {
   weight: number;
@@ -26,6 +41,7 @@ interface RegularExerciseCardProps {
   programId?: string;
   currentSessionId?: string;
   onUpdateLog: (log: ExerciseLog) => void;
+  index?: number; // For staggered animation
 }
 
 export function RegularExerciseCard({
@@ -39,24 +55,32 @@ export function RegularExerciseCard({
   programId,
   currentSessionId,
   onUpdateLog,
+  index = 0,
 }: RegularExerciseCardProps) {
   const [previousSets, setPreviousSets] = useState<PreviousSet[]>([]);
   const [previousNotes, setPreviousNotes] = useState<string | undefined>();
-  const [newSetWeight, setNewSetWeight] = useState('');
-  const [newSetReps, setNewSetReps] = useState('');
-  const [exerciseNotes, setExerciseNotes] = useState(exerciseLog.notes || '');
+  const [newSetWeight, setNewSetWeight] = useState("");
+  const [newSetReps, setNewSetReps] = useState("");
+  const [exerciseNotes, setExerciseNotes] = useState(exerciseLog.notes || "");
   const [showAlternatives, setShowAlternatives] = useState(false);
   const [editingSet, setEditingSet] = useState<number | null>(null);
-  const [editWeight, setEditWeight] = useState('');
-  const [editReps, setEditReps] = useState('');
+  const [editWeight, setEditWeight] = useState("");
+  const [editReps, setEditReps] = useState("");
+  const [recentlyAddedSet, setRecentlyAddedSet] = useState<number | null>(null);
+  const [removingSet, setRemovingSet] = useState<number | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const prevSetsCountRef = useRef(exerciseLog.sets.length);
 
   useEffect(() => {
     const loadPreviousData = async () => {
-      const data = await getLastExerciseSets(exerciseName, programId, currentSessionId);
+      const data = await getLastExerciseSets(
+        exerciseName,
+        programId,
+        currentSessionId
+      );
       if (data) {
         setPreviousSets(data.sets);
         setPreviousNotes(data.exerciseNotes);
-        // Pre-fill with first set's weight/reps if not already filled
         if (data.sets.length > 0 && !newSetWeight) {
           setNewSetWeight(data.sets[0].weight.toString());
           setNewSetReps(data.sets[0].reps.toString());
@@ -66,7 +90,26 @@ export function RegularExerciseCard({
     loadPreviousData();
   }, [exerciseName, programId, currentSessionId]);
 
-  const completedSets = exerciseLog.sets.filter(s => s.completed).length;
+  // Track set count changes for success animation
+  useEffect(() => {
+    const targetSets = targets?.sets ? parseInt(targets.sets) : null;
+    const currentCount = exerciseLog.sets.filter((s) => s.completed).length;
+    const prevCount = prevSetsCountRef.current;
+
+    if (targetSets && currentCount >= targetSets && prevCount < targetSets) {
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 600);
+    }
+
+    prevSetsCountRef.current = currentCount;
+  }, [exerciseLog.sets, targets?.sets]);
+
+  const completedSets = exerciseLog.sets.filter((s) => s.completed).length;
+  const targetSets = targets?.sets ? parseInt(targets.sets) : null;
+  const progressPercentage = targetSets
+    ? (completedSets / targetSets) * 100
+    : 0;
+  const isComplete = targetSets ? completedSets >= targetSets : false;
 
   const addSet = () => {
     const setNumber = exerciseLog.sets.length + 1;
@@ -77,12 +120,14 @@ export function RegularExerciseCard({
       completed: true,
     };
 
+    setRecentlyAddedSet(setNumber);
+    setTimeout(() => setRecentlyAddedSet(null), 300);
+
     onUpdateLog({
       ...exerciseLog,
       sets: [...exerciseLog.sets, newSet],
     });
 
-    // Pre-fill next set based on previous workout if available
     const nextPrevSet = previousSets[exerciseLog.sets.length + 1];
     if (nextPrevSet) {
       setNewSetWeight(nextPrevSet.weight.toString());
@@ -91,14 +136,19 @@ export function RegularExerciseCard({
   };
 
   const removeSet = (setNumber: number) => {
-    const updatedSets = exerciseLog.sets
-      .filter(s => s.setNumber !== setNumber)
-      .map((s, idx) => ({ ...s, setNumber: idx + 1 }));
+    setRemovingSet(setNumber);
 
-    onUpdateLog({
-      ...exerciseLog,
-      sets: updatedSets,
-    });
+    setTimeout(() => {
+      const updatedSets = exerciseLog.sets
+        .filter((s) => s.setNumber !== setNumber)
+        .map((s, idx) => ({ ...s, setNumber: idx + 1 }));
+
+      onUpdateLog({
+        ...exerciseLog,
+        sets: updatedSets,
+      });
+      setRemovingSet(null);
+    }, 200);
   };
 
   const startEditSet = (set: SetLog) => {
@@ -108,9 +158,13 @@ export function RegularExerciseCard({
   };
 
   const saveEditSet = (setNumber: number) => {
-    const updatedSets = exerciseLog.sets.map(s =>
+    const updatedSets = exerciseLog.sets.map((s) =>
       s.setNumber === setNumber
-        ? { ...s, weight: parseFloat(editWeight) || 0, reps: parseInt(editReps) || 0 }
+        ? {
+            ...s,
+            weight: parseFloat(editWeight) || 0,
+            reps: parseInt(editReps) || 0,
+          }
         : s
     );
 
@@ -120,14 +174,14 @@ export function RegularExerciseCard({
     });
 
     setEditingSet(null);
-    setEditWeight('');
-    setEditReps('');
+    setEditWeight("");
+    setEditReps("");
   };
 
   const cancelEditSet = () => {
     setEditingSet(null);
-    setEditWeight('');
-    setEditReps('');
+    setEditWeight("");
+    setEditReps("");
   };
 
   const updateNotes = (value: string) => {
@@ -138,11 +192,16 @@ export function RegularExerciseCard({
     });
   };
 
-  // Check if we have any targets to display
   const hasTargets = targets && (targets.sets || targets.reps || targets.rir);
 
   return (
-    <Card>
+    <Card
+      className={cn(
+        "animate-slide-up transition-all duration-300",
+        showSuccess && "ring-2 ring-green-500/50"
+      )}
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -153,7 +212,7 @@ export function RegularExerciseCard({
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground transition-colors duration-150"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
@@ -168,27 +227,59 @@ export function RegularExerciseCard({
               <p className="text-sm text-muted-foreground">{description}</p>
             )}
           </div>
-          <Badge variant={completedSets > 0 ? 'default' : 'outline'}>
-            {completedSets}{targets?.sets ? `/${targets.sets}` : ''} sets
+          <Badge
+            variant={completedSets > 0 ? "default" : "outline"}
+            className={cn(
+              "transition-all duration-300 tabular-nums",
+              isComplete && "bg-green-500 hover:bg-green-500/90"
+            )}
+          >
+            {showSuccess && <Check className="h-3 w-3 mr-1 animate-scale-in" />}
+            {completedSets}
+            {targets?.sets ? `/${targets.sets}` : ""} sets
           </Badge>
         </div>
+
+        {/* Progress bar for target sets */}
+        {targetSets && (
+          <div className="mt-3">
+            <Progress
+              value={completedSets}
+              max={targetSets}
+              className="h-1.5"
+              indicatorClassName={cn(
+                "transition-all duration-500",
+                isComplete ? "bg-green-500" : "bg-primary"
+              )}
+            />
+          </div>
+        )}
 
         {/* Targets Display */}
         {hasTargets && (
           <div className="mt-2 flex gap-4 text-sm">
             {targets.sets && (
               <span className="text-muted-foreground">
-                <span className="font-medium text-foreground">{targets.sets}</span> sets
+                <span className="font-medium text-foreground">
+                  {targets.sets}
+                </span>{" "}
+                sets
               </span>
             )}
             {targets.reps && (
               <span className="text-muted-foreground">
-                <span className="font-medium text-foreground">{targets.reps}</span> reps
+                <span className="font-medium text-foreground">
+                  {targets.reps}
+                </span>{" "}
+                reps
               </span>
             )}
             {targets.rir && (
               <span className="text-muted-foreground">
-                RIR <span className="font-medium text-foreground">{targets.rir}</span>
+                RIR{" "}
+                <span className="font-medium text-foreground">
+                  {targets.rir}
+                </span>
               </span>
             )}
           </div>
@@ -199,26 +290,41 @@ export function RegularExerciseCard({
           <div className="mt-2">
             <button
               onClick={() => setShowAlternatives(!showAlternatives)}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150"
             >
-              {showAlternatives ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
+              <span
+                className={cn(
+                  "transition-transform duration-200",
+                  showAlternatives && "rotate-180"
+                )}
+              >
                 <ChevronDown className="h-4 w-4" />
-              )}
-              {alternatives.length} alternative{alternatives.length > 1 ? 's' : ''}
+              </span>
+              {alternatives.length} alternative
+              {alternatives.length > 1 ? "s" : ""}
             </button>
-            {showAlternatives && (
-              <div className="mt-2 pl-4 border-l-2 border-muted space-y-1">
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-300",
+                showAlternatives
+                  ? "max-h-40 opacity-100 mt-2"
+                  : "max-h-0 opacity-0"
+              )}
+            >
+              <div className="pl-4 border-l-2 border-muted space-y-1">
                 {alternatives.map((alt, idx) => (
-                  <div key={idx} className="text-sm flex items-center gap-2">
+                  <div
+                    key={idx}
+                    className="text-sm flex items-center gap-2 animate-fade-in"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
                     <span>{alt.name}</span>
                     {alt.link && (
                       <a
                         href={alt.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground transition-colors duration-150"
                       >
                         <ExternalLink className="h-3 w-3" />
                       </a>
@@ -226,7 +332,7 @@ export function RegularExerciseCard({
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
         )}
       </CardHeader>
@@ -243,7 +349,9 @@ export function RegularExerciseCard({
               {previousSets.map((set, idx) => (
                 <div key={idx} className="text-sm text-muted-foreground">
                   Set {idx + 1}: {set.weight} kg × {set.reps}
-                  {set.notes && <span className="italic ml-2">({set.notes})</span>}
+                  {set.notes && (
+                    <span className="italic ml-2">({set.notes})</span>
+                  )}
                 </div>
               ))}
               {previousNotes && (
@@ -262,18 +370,26 @@ export function RegularExerciseCard({
             {exerciseLog.sets.map((set) => (
               <div
                 key={set.setNumber}
-                className="flex items-center justify-between p-2 bg-muted rounded-md"
+                className={cn(
+                  "flex items-center justify-between p-2 bg-muted rounded-md transition-all duration-200",
+                  recentlyAddedSet === set.setNumber &&
+                    "animate-slide-up bg-green-500/10",
+                  removingSet === set.setNumber &&
+                    "animate-fade-out opacity-0 scale-95"
+                )}
               >
                 {editingSet === set.setNumber ? (
                   <>
                     <div className="flex items-center gap-2 flex-1">
-                      <span className="text-sm font-medium w-8">#{set.setNumber}</span>
+                      <span className="text-sm font-medium w-8 tabular-nums">
+                        #{set.setNumber}
+                      </span>
                       <Input
                         type="number"
                         step="2.5"
                         value={editWeight}
                         onChange={(e) => setEditWeight(e.target.value)}
-                        className="h-8 w-20"
+                        className="h-8 w-20 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                         autoFocus
                       />
                       <span className="text-sm text-muted-foreground">kg</span>
@@ -282,20 +398,22 @@ export function RegularExerciseCard({
                         type="number"
                         value={editReps}
                         onChange={(e) => setEditReps(e.target.value)}
-                        className="h-8 w-16"
+                        className="h-8 w-16 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveEditSet(set.setNumber);
-                          if (e.key === 'Escape') cancelEditSet();
+                          if (e.key === "Enter") saveEditSet(set.setNumber);
+                          if (e.key === "Escape") cancelEditSet();
                         }}
                       />
-                      <span className="text-sm text-muted-foreground">reps</span>
+                      <span className="text-sm text-muted-foreground">
+                        reps
+                      </span>
                     </div>
                     <div className="flex gap-1">
                       <Button
                         size="icon-sm"
                         variant="ghost"
                         onClick={() => saveEditSet(set.setNumber)}
-                        className="text-green-600"
+                        className="text-green-600 hover:text-green-600 hover:bg-green-500/10 press-effect"
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -303,6 +421,7 @@ export function RegularExerciseCard({
                         size="icon-sm"
                         variant="ghost"
                         onClick={cancelEditSet}
+                        className="press-effect"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -311,15 +430,22 @@ export function RegularExerciseCard({
                 ) : (
                   <>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm font-medium w-8">#{set.setNumber}</span>
-                      <span className="text-sm">{set.weight} kg</span>
-                      <span className="text-sm">× {set.reps} reps</span>
+                      <span className="text-sm font-medium w-8 tabular-nums">
+                        #{set.setNumber}
+                      </span>
+                      <span className="text-sm tabular-nums">
+                        {set.weight} kg
+                      </span>
+                      <span className="text-sm tabular-nums">
+                        × {set.reps} reps
+                      </span>
                     </div>
                     <div className="flex gap-1">
                       <Button
                         size="icon-sm"
                         variant="ghost"
                         onClick={() => startEditSet(set)}
+                        className="opacity-60 hover:opacity-100 transition-opacity press-effect"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -327,7 +453,7 @@ export function RegularExerciseCard({
                         size="icon-sm"
                         variant="ghost"
                         onClick={() => removeSet(set.setNumber)}
-                        className="text-destructive"
+                        className="text-destructive opacity-60 hover:opacity-100 transition-opacity press-effect"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -343,14 +469,16 @@ export function RegularExerciseCard({
         <div className="space-y-3 pt-2 border-t">
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-1">
-              <label className="text-xs text-muted-foreground">Weight (kg)</label>
+              <label className="text-xs text-muted-foreground">
+                Weight (kg)
+              </label>
               <Input
                 type="number"
                 step="2.5"
                 value={newSetWeight}
                 onChange={(e) => setNewSetWeight(e.target.value)}
-                placeholder={previousSets[0]?.weight.toString() || '0'}
-                className="h-9"
+                placeholder={previousSets[0]?.weight.toString() || "0"}
+                className="h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div className="flex-1 space-y-1">
@@ -359,11 +487,14 @@ export function RegularExerciseCard({
                 type="number"
                 value={newSetReps}
                 onChange={(e) => setNewSetReps(e.target.value)}
-                placeholder={previousSets[0]?.reps.toString() || '0'}
-                className="h-9"
+                placeholder={previousSets[0]?.reps.toString() || "0"}
+                className="h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addSet();
+                }}
               />
             </div>
-            <Button onClick={addSet} size="sm">
+            <Button onClick={addSet} size="sm" className="press-effect">
               <Plus className="h-4 w-4 mr-1" />
               Add Set
             </Button>
@@ -371,12 +502,14 @@ export function RegularExerciseCard({
 
           {/* Notes Input */}
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Notes (optional)</label>
+            <label className="text-xs text-muted-foreground">
+              Notes (optional)
+            </label>
             <Input
               value={exerciseNotes}
               onChange={(e) => updateNotes(e.target.value)}
               placeholder="How did it feel? Any observations..."
-              className="h-9"
+              className="h-9 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>

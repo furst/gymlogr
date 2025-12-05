@@ -1,30 +1,51 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Upload, Trash2, Check, AlertCircle, Pencil, X, Save, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { saveProgram, getAllPrograms, deleteProgram, getUserSettings, saveUserSettings } from '@/lib/db';
-import type { Program } from '@/lib/types';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Upload,
+  Trash2,
+  Check,
+  AlertCircle,
+  Pencil,
+  X,
+  Save,
+  Settings,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ProgramsPageSkeleton } from "@/components/ui/exercise-card-skeleton";
+import {
+  saveProgram,
+  getAllPrograms,
+  deleteProgram,
+  getUserSettings,
+  saveUserSettings,
+} from "@/lib/db";
+import type { Program } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-// Generate unique ID for exercises
 function generateExerciseId(): string {
   return `ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
-// Process program to add IDs to exercises that don't have them
 function processProgram(program: Program): Program {
   return {
     ...program,
-    weeks: program.weeks.map(week => ({
+    weeks: program.weeks.map((week) => ({
       ...week,
-      days: week.days.map(day => ({
+      days: week.days.map((day) => ({
         ...day,
-        exercises: day.exercises.map(exercise => ({
+        exercises: day.exercises.map((exercise) => ({
           ...exercise,
           id: exercise.id || generateExerciseId(),
         })),
@@ -41,6 +62,9 @@ export default function ProgramsPage() {
   const [loading, setLoading] = useState(true);
   const [editingMaxes, setEditingMaxes] = useState<string | null>(null);
   const [editedMaxes, setEditedMaxes] = useState<Record<string, number>>({});
+  const [recentlyActivated, setRecentlyActivated] = useState<string | null>(
+    null
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -51,7 +75,7 @@ export default function ProgramsPage() {
       setPrograms(progs);
       setActiveProgramId(settings.activeProgramId || null);
     } catch (err) {
-      setError('Failed to load programs');
+      setError("Failed to load programs");
       console.error(err);
     } finally {
       setLoading(false);
@@ -62,7 +86,9 @@ export default function ProgramsPage() {
     loadData();
   }, [loadData]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -72,21 +98,26 @@ export default function ProgramsPage() {
       const text = await file.text();
       const rawProgram = JSON.parse(text) as Program;
 
-      // Validate required fields
-      if (!rawProgram.name || !rawProgram.settings?.maxes || !rawProgram.weeks) {
-        throw new Error('Invalid program format. Required: name, settings.maxes, weeks');
+      if (
+        !rawProgram.name ||
+        !rawProgram.settings?.maxes ||
+        !rawProgram.weeks
+      ) {
+        throw new Error(
+          "Invalid program format. Required: name, settings.maxes, weeks"
+        );
       }
 
-      // Process program to auto-generate missing exercise IDs
       const program = processProgram(rawProgram);
 
       await saveProgram(program);
       await loadData();
 
-      // Reset file input
-      event.target.value = '';
+      event.target.value = "";
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to parse program file');
+      setError(
+        err instanceof Error ? err.message : "Failed to parse program file"
+      );
       console.error(err);
     }
   };
@@ -94,14 +125,19 @@ export default function ProgramsPage() {
   const handleSetActive = async (programId: string) => {
     await saveUserSettings({ activeProgramId: programId, currentWeek: 1 });
     setActiveProgramId(programId);
+    setRecentlyActivated(programId);
+    setTimeout(() => setRecentlyActivated(null), 600);
   };
 
   const handleDelete = async (programId: string) => {
-    if (!confirm('Are you sure you want to delete this program?')) return;
+    if (!confirm("Are you sure you want to delete this program?")) return;
 
     await deleteProgram(programId);
     if (activeProgramId === programId) {
-      await saveUserSettings({ activeProgramId: undefined, currentWeek: undefined });
+      await saveUserSettings({
+        activeProgramId: undefined,
+        currentWeek: undefined,
+      });
       setActiveProgramId(null);
     }
     await loadData();
@@ -134,25 +170,27 @@ export default function ProgramsPage() {
 
   const handleMaxChange = (lift: string, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setEditedMaxes(prev => ({
+    setEditedMaxes((prev) => ({
       ...prev,
       [lift]: numValue,
     }));
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <ProgramsPageSkeleton />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Programs</h1>
-          <p className="text-muted-foreground">Upload and manage your training programs</p>
+          <p className="text-muted-foreground">
+            Upload and manage your training programs
+          </p>
         </div>
         <label htmlFor="file-upload">
-          <Button asChild>
+          <Button asChild className="press-effect">
             <span>
               <Upload className="h-4 w-4 mr-2" />
               Upload Program
@@ -169,20 +207,22 @@ export default function ProgramsPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-md">
+        <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-md animate-slide-down">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>
       )}
 
       {programs.length === 0 ? (
-        <Card>
+        <Card className="animate-scale-in">
           <CardContent className="py-12 text-center">
+            <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">
-              No programs uploaded yet. Upload a JSON program file to get started.
+              No programs uploaded yet. Upload a JSON program file to get
+              started.
             </p>
             <label htmlFor="file-upload-empty">
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="press-effect">
                 <span>
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Your First Program
@@ -200,27 +240,40 @@ export default function ProgramsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {programs.map((program) => (
-            <Card key={program.id} className={activeProgramId === program.id ? 'border-primary' : ''}>
+          {programs.map((program, index) => (
+            <Card
+              key={program.id}
+              className={cn(
+                "animate-slide-up transition-all duration-300",
+                activeProgramId === program.id &&
+                  "border-primary ring-1 ring-primary/20",
+                recentlyActivated === program.id && "animate-success-pop"
+              )}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <CardTitle className="flex items-center gap-2 flex-wrap">
                       {program.name}
                       {activeProgramId === program.id && (
-                        <Badge variant="default">Active</Badge>
+                        <Badge variant="default" className="animate-scale-in">
+                          <Check className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
                       )}
                     </CardTitle>
                     {program.description && (
                       <CardDescription>{program.description}</CardDescription>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     {activeProgramId !== program.id && (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleSetActive(program.id!)}
+                        className="press-effect"
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Set Active
@@ -229,7 +282,10 @@ export default function ProgramsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => router.push(`/programs/${program.id}/edit`)}
+                      onClick={() =>
+                        router.push(`/programs/${program.id}/edit`)
+                      }
+                      className="press-effect"
                     >
                       <Settings className="h-4 w-4 mr-1" />
                       Edit Program
@@ -237,7 +293,7 @@ export default function ProgramsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 press-effect"
                       onClick={() => handleDelete(program.id!)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -247,13 +303,17 @@ export default function ProgramsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Weeks:</span>{' '}
-                    <span className="font-medium">{program.weeks.length}</span>
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <span className="text-muted-foreground">Weeks:</span>{" "}
+                    <span className="font-medium tabular-nums">
+                      {program.weeks.length}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Days/Week:</span>{' '}
-                    <span className="font-medium">{program.weeks[0]?.days.length || 0}</span>
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <span className="text-muted-foreground">Days/Week:</span>{" "}
+                    <span className="font-medium tabular-nums">
+                      {program.weeks[0]?.days.length || 0}
+                    </span>
                   </div>
                 </div>
 
@@ -267,6 +327,7 @@ export default function ProgramsPage() {
                           size="sm"
                           variant="ghost"
                           onClick={handleCancelEdit}
+                          className="press-effect"
                         >
                           <X className="h-4 w-4 mr-1" />
                           Cancel
@@ -274,6 +335,7 @@ export default function ProgramsPage() {
                         <Button
                           size="sm"
                           onClick={() => handleSaveMaxes(program)}
+                          className="press-effect"
                         >
                           <Save className="h-4 w-4 mr-1" />
                           Save
@@ -284,6 +346,7 @@ export default function ProgramsPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleEditMaxes(program)}
+                        className="press-effect"
                       >
                         <Pencil className="h-4 w-4 mr-1" />
                         Edit
@@ -292,7 +355,7 @@ export default function ProgramsPage() {
                   </div>
 
                   {editingMaxes === program.id ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-fade-in">
                       {Object.entries(editedMaxes).map(([lift, weight]) => (
                         <div key={lift} className="space-y-1">
                           <Label htmlFor={`max-${lift}`} className="text-xs">
@@ -304,22 +367,35 @@ export default function ProgramsPage() {
                               type="number"
                               step="2.5"
                               value={weight}
-                              onChange={(e) => handleMaxChange(lift, e.target.value)}
-                              className="h-8"
+                              onChange={(e) =>
+                                handleMaxChange(lift, e.target.value)
+                              }
+                              className="h-8 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                             />
-                            <span className="text-xs text-muted-foreground">kg</span>
+                            <span className="text-xs text-muted-foreground">
+                              kg
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-                      {Object.entries(program.settings.maxes).map(([lift, weight]) => (
-                        <div key={lift} className="flex justify-between">
-                          <span className="text-muted-foreground">{lift}:</span>
-                          <span className="font-medium">{weight} kg</span>
-                        </div>
-                      ))}
+                      {Object.entries(program.settings.maxes).map(
+                        ([lift, weight]) => (
+                          <div
+                            key={lift}
+                            className="flex justify-between p-1.5 rounded bg-muted/30"
+                          >
+                            <span className="text-muted-foreground">
+                              {lift}:
+                            </span>
+                            <span className="font-medium tabular-nums">
+                              {weight} kg
+                            </span>
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
                 </div>

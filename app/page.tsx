@@ -1,69 +1,90 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Dumbbell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { SBSExerciseCard } from '@/components/sbs-exercise-card';
-import { RegularExerciseCard } from '@/components/regular-exercise-card';
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { SBSExerciseCard } from "@/components/sbs-exercise-card";
+import { RegularExerciseCard } from "@/components/regular-exercise-card";
+import { WorkoutPageSkeleton } from "@/components/ui/exercise-card-skeleton";
 import {
   getProgram,
   getUserSettings,
   saveUserSettings,
   saveWorkoutSession,
   getWorkoutSessionForDay,
-} from '@/lib/db';
-import { getSBSPrescription, type SBSPrescription } from '@/lib/sbs-calculations';
-import type { Program, ExerciseLog, WorkoutSession } from '@/lib/types';
+} from "@/lib/db";
+import {
+  getSBSPrescription,
+  type SBSPrescription,
+} from "@/lib/sbs-calculations";
+import type { Program, ExerciseLog, WorkoutSession } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function WorkoutPage() {
   const [program, setProgram] = useState<Program | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
-  const [activeDay, setActiveDay] = useState<string>('');
-  const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(null);
-  const [prescriptions, setPrescriptions] = useState<Record<string, SBSPrescription>>({});
+  const [activeDay, setActiveDay] = useState<string>("");
+  const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(
+    null
+  );
+  const [prescriptions, setPrescriptions] = useState<
+    Record<string, SBSPrescription>
+  >({});
   const [loading, setLoading] = useState(true);
+  const [weekTransition, setWeekTransition] = useState<"left" | "right" | null>(
+    null
+  );
+  const [contentKey, setContentKey] = useState(0); // For triggering re-animation
+  const prevWeekRef = useRef(currentWeek);
 
-  const loadWorkoutSession = useCallback(async (
-    prog: Program,
-    programId: string,
-    weekNumber: number,
-    dayName: string
-  ) => {
-    const existing = await getWorkoutSessionForDay(programId, weekNumber, dayName);
+  const loadWorkoutSession = useCallback(
+    async (
+      prog: Program,
+      programId: string,
+      weekNumber: number,
+      dayName: string
+    ) => {
+      const existing = await getWorkoutSessionForDay(
+        programId,
+        weekNumber,
+        dayName
+      );
 
-    if (existing) {
-      setWorkoutSession(existing);
-      return;
-    }
+      if (existing) {
+        setWorkoutSession(existing);
+        return;
+      }
 
-    // Create new session
-    const weekData = prog.weeks.find(w => w.week_number === weekNumber);
-    const dayData = weekData?.days.find(d => d.name === dayName);
+      // Create new session
+      const weekData = prog.weeks.find((w) => w.week_number === weekNumber);
+      const dayData = weekData?.days.find((d) => d.name === dayName);
 
-    if (!dayData) return;
+      if (!dayData) return;
 
-    const exercises: ExerciseLog[] = dayData.exercises.map(ex => ({
-      exerciseId: ex.id!, // ID is guaranteed to exist after program processing
-      exerciseName: ex.name,
-      type: ex.type,
-      sets: [],
-    }));
+      const exercises: ExerciseLog[] = dayData.exercises.map((ex) => ({
+        exerciseId: ex.id!,
+        exerciseName: ex.name,
+        type: ex.type,
+        sets: [],
+      }));
 
-    const newSession: WorkoutSession = {
-      programId,
-      weekNumber,
-      dayName,
-      date: new Date(),
-      exercises,
-      completed: false,
-      startedAt: new Date(),
-    };
+      const newSession: WorkoutSession = {
+        programId,
+        weekNumber,
+        dayName,
+        date: new Date(),
+        exercises,
+        completed: false,
+        startedAt: new Date(),
+      };
 
-    setWorkoutSession(newSession);
-  }, []);
+      setWorkoutSession(newSession);
+    },
+    []
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -84,23 +105,21 @@ export default function WorkoutPage() {
       const week = settings.currentWeek || 1;
       setCurrentWeek(week);
 
-      // Get the current week's days
-      const weekData = prog.weeks.find(w => w.week_number === week);
+      const weekData = prog.weeks.find((w) => w.week_number === week);
       if (weekData && weekData.days.length > 0) {
-        // Use saved day if it exists in this week, otherwise default to first day
         const savedDay = settings.currentDay;
-        const dayExists = savedDay && weekData.days.some(d => d.name === savedDay);
+        const dayExists =
+          savedDay && weekData.days.some((d) => d.name === savedDay);
         const dayName = dayExists ? savedDay : weekData.days[0].name;
         setActiveDay(dayName);
 
-        // Calculate SBS prescriptions for this week
         const presc: Record<string, SBSPrescription> = {};
         for (const day of weekData.days) {
           for (const exercise of day.exercises) {
-            if (exercise.type === 'sbs' && exercise.sbs_config && exercise.id) {
+            if (exercise.type === "sbs" && exercise.sbs_config && exercise.id) {
               presc[exercise.id] = getSBSPrescription(
                 exercise.sbs_config.lift_key,
-                week - 1, // 0-indexed
+                week - 1,
                 prog.settings,
                 settings.weightIncrement
               );
@@ -109,11 +128,10 @@ export default function WorkoutPage() {
         }
         setPrescriptions(presc);
 
-        // Load or create workout session for this day
         await loadWorkoutSession(prog, settings.activeProgramId, week, dayName);
       }
     } catch (err) {
-      console.error('Failed to load data:', err);
+      console.error("Failed to load data:", err);
     } finally {
       setLoading(false);
     }
@@ -123,11 +141,28 @@ export default function WorkoutPage() {
     loadData();
   }, [loadData]);
 
+  // Handle week transition animation
+  useEffect(() => {
+    if (prevWeekRef.current !== currentWeek) {
+      const direction = currentWeek > prevWeekRef.current ? "right" : "left";
+      setWeekTransition(direction);
+      setContentKey((prev) => prev + 1);
+
+      const timer = setTimeout(() => {
+        setWeekTransition(null);
+      }, 300);
+
+      prevWeekRef.current = currentWeek;
+      return () => clearTimeout(timer);
+    }
+  }, [currentWeek]);
+
   const handleDayChange = async (dayName: string) => {
     if (!program || !workoutSession) return;
 
+    // Trigger content re-animation
+    setContentKey((prev) => prev + 1);
     setActiveDay(dayName);
-    // Persist the active day to settings
     await saveUserSettings({ currentDay: dayName });
 
     await loadWorkoutSession(
@@ -141,27 +176,27 @@ export default function WorkoutPage() {
   const handleWeekChange = async (delta: number) => {
     if (!program) return;
 
-    const newWeek = Math.max(1, Math.min(currentWeek + delta, program.weeks.length));
+    const newWeek = Math.max(
+      1,
+      Math.min(currentWeek + delta, program.weeks.length)
+    );
     if (newWeek === currentWeek) return;
 
     setCurrentWeek(newWeek);
 
-    const weekData = program.weeks.find(w => w.week_number === newWeek);
+    const weekData = program.weeks.find((w) => w.week_number === newWeek);
     if (weekData && weekData.days.length > 0) {
-      // Check if current day exists in new week, otherwise use first day
-      const dayExists = weekData.days.some(d => d.name === activeDay);
+      const dayExists = weekData.days.some((d) => d.name === activeDay);
       const dayName = dayExists ? activeDay : weekData.days[0].name;
       setActiveDay(dayName);
 
-      // Save both week and day
       await saveUserSettings({ currentWeek: newWeek, currentDay: dayName });
 
-      // Recalculate prescriptions for new week
       const settings = await getUserSettings();
       const presc: Record<string, SBSPrescription> = {};
       for (const day of weekData.days) {
         for (const exercise of day.exercises) {
-          if (exercise.type === 'sbs' && exercise.sbs_config && exercise.id) {
+          if (exercise.type === "sbs" && exercise.sbs_config && exercise.id) {
             presc[exercise.id] = getSBSPrescription(
               exercise.sbs_config.lift_key,
               newWeek - 1,
@@ -173,14 +208,22 @@ export default function WorkoutPage() {
       }
       setPrescriptions(presc);
 
-      await loadWorkoutSession(program, settings.activeProgramId!, newWeek, dayName);
+      await loadWorkoutSession(
+        program,
+        settings.activeProgramId!,
+        newWeek,
+        dayName
+      );
     }
   };
 
-  const handleUpdateExerciseLog = async (exerciseId: string, log: ExerciseLog) => {
+  const handleUpdateExerciseLog = async (
+    exerciseId: string,
+    log: ExerciseLog
+  ) => {
     if (!workoutSession) return;
 
-    const updatedExercises = workoutSession.exercises.map(ex =>
+    const updatedExercises = workoutSession.exercises.map((ex) =>
       ex.exerciseId === exerciseId ? log : ex
     );
 
@@ -191,40 +234,39 @@ export default function WorkoutPage() {
 
     setWorkoutSession(updatedSession);
 
-    // Auto-save the workout
     try {
       await saveWorkoutSession(updatedSession);
     } catch (err) {
-      console.error('Failed to auto-save workout:', err);
+      console.error("Failed to auto-save workout:", err);
     }
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <WorkoutPageSkeleton />;
   }
 
   if (!program) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 animate-fade-in">
         <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">No Active Program</h2>
         <p className="text-muted-foreground mb-4">
           Upload and select a program to start your workout.
         </p>
-        <Button asChild>
+        <Button asChild className="press-effect">
           <Link href="/programs">Go to Programs</Link>
         </Button>
       </div>
     );
   }
 
-  const weekData = program.weeks.find(w => w.week_number === currentWeek);
+  const weekData = program.weeks.find((w) => w.week_number === currentWeek);
 
-  // Calculate completed sets for this day
-  const totalCompletedSets = workoutSession?.exercises.reduce(
-    (sum, ex) => sum + ex.sets.filter(s => s.completed).length,
-    0
-  ) || 0;
+  const totalCompletedSets =
+    workoutSession?.exercises.reduce(
+      (sum, ex) => sum + ex.sets.filter((s) => s.completed).length,
+      0
+    ) || 0;
 
   return (
     <div className="space-y-6">
@@ -235,13 +277,22 @@ export default function WorkoutPage() {
           size="sm"
           onClick={() => handleWeekChange(-1)}
           disabled={currentWeek <= 1}
+          className="press-effect transition-all duration-150 hover:bg-muted"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <div className="text-center">
+        <div
+          className={cn(
+            "text-center transition-all duration-300",
+            weekTransition === "right" && "animate-slide-in-right",
+            weekTransition === "left" && "animate-slide-in-left"
+          )}
+        >
           <h1 className="text-xl font-bold">{program.name}</h1>
-          <p className="text-muted-foreground">
-            Week {currentWeek} of {program.weeks.length}
+          <p className="text-muted-foreground tabular-nums">
+            Week{" "}
+            <span className="font-semibold text-foreground">{currentWeek}</span>{" "}
+            of {program.weeks.length}
           </p>
         </div>
         <Button
@@ -249,6 +300,7 @@ export default function WorkoutPage() {
           size="sm"
           onClick={() => handleWeekChange(1)}
           disabled={currentWeek >= program.weeks.length}
+          className="press-effect transition-all duration-150 hover:bg-muted"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -257,66 +309,94 @@ export default function WorkoutPage() {
       {/* Day Tabs */}
       {weekData && (
         <Tabs value={activeDay} onValueChange={handleDayChange}>
-          <TabsList className="w-full justify-start">
-            {weekData.days.map(day => (
-              <TabsTrigger key={day.name} value={day.name}>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            {weekData.days.map((day, index) => (
+              <TabsTrigger
+                key={day.name}
+                value={day.name}
+                className="transition-all duration-200 data-[state=active]:shadow-sm"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 {day.name}
               </TabsTrigger>
             ))}
           </TabsList>
 
-          {weekData.days.map(day => (
-            <TabsContent key={day.name} value={day.name} className="space-y-4 mt-4">
+          {weekData.days.map((day) => (
+            <TabsContent
+              key={`${day.name}-${contentKey}`}
+              value={day.name}
+              className="space-y-4 mt-4 animate-fade-in"
+            >
               {/* Stats bar */}
               <div className="flex items-center gap-2">
-                <Badge variant="outline">{day.exercises.length} exercises</Badge>
-                <Badge variant={totalCompletedSets > 0 ? 'default' : 'secondary'}>
+                <Badge
+                  variant="outline"
+                  className="transition-all duration-200"
+                >
+                  {day.exercises.length} exercises
+                </Badge>
+                <Badge
+                  variant={totalCompletedSets > 0 ? "default" : "secondary"}
+                  className={cn(
+                    "transition-all duration-300 tabular-nums",
+                    totalCompletedSets > 0 && "animate-pulse-scale"
+                  )}
+                >
                   {totalCompletedSets} sets logged
                 </Badge>
               </div>
 
               {/* Exercise Cards */}
-              {day.exercises.map(exercise => {
-                if (!exercise.id) return null;
+              <div className="space-y-4">
+                {day.exercises.map((exercise, index) => {
+                  if (!exercise.id) return null;
 
-                const exerciseLog = workoutSession?.exercises.find(
-                  ex => ex.exerciseId === exercise.id
-                );
+                  const exerciseLog = workoutSession?.exercises.find(
+                    (ex) => ex.exerciseId === exercise.id
+                  );
 
-                if (!exerciseLog) return null;
+                  if (!exerciseLog) return null;
 
-                if (exercise.type === 'sbs' && prescriptions[exercise.id]) {
+                  if (exercise.type === "sbs" && prescriptions[exercise.id]) {
+                    return (
+                      <SBSExerciseCard
+                        key={exercise.id}
+                        exerciseName={exercise.name}
+                        prescription={prescriptions[exercise.id]}
+                        exerciseLog={exerciseLog}
+                        lastSetIntensity={exercise.lastSetIntensity}
+                        description={exercise.description}
+                        link={exercise.link}
+                        alternatives={exercise.alternatives}
+                        onUpdateLog={(log) =>
+                          handleUpdateExerciseLog(exercise.id!, log)
+                        }
+                        index={index}
+                      />
+                    );
+                  }
+
                   return (
-                    <SBSExerciseCard
+                    <RegularExerciseCard
                       key={exercise.id}
                       exerciseName={exercise.name}
-                      prescription={prescriptions[exercise.id]}
                       exerciseLog={exerciseLog}
                       lastSetIntensity={exercise.lastSetIntensity}
                       description={exercise.description}
                       link={exercise.link}
                       alternatives={exercise.alternatives}
-                      onUpdateLog={(log) => handleUpdateExerciseLog(exercise.id!, log)}
+                      targets={exercise.targets}
+                      programId={workoutSession?.programId}
+                      currentSessionId={workoutSession?.id}
+                      onUpdateLog={(log) =>
+                        handleUpdateExerciseLog(exercise.id!, log)
+                      }
+                      index={index}
                     />
                   );
-                }
-
-                return (
-                  <RegularExerciseCard
-                    key={exercise.id}
-                    exerciseName={exercise.name}
-                    exerciseLog={exerciseLog}
-                    lastSetIntensity={exercise.lastSetIntensity}
-                    description={exercise.description}
-                    link={exercise.link}
-                    alternatives={exercise.alternatives}
-                    targets={exercise.targets}
-                    programId={workoutSession?.programId}
-                    currentSessionId={workoutSession?.id}
-                    onUpdateLog={(log) => handleUpdateExerciseLog(exercise.id!, log)}
-                  />
-                );
-              })}
+                })}
+              </div>
             </TabsContent>
           ))}
         </Tabs>

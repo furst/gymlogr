@@ -26,7 +26,7 @@ export interface RegularExerciseTargets {
 export interface ExerciseDefinition {
   id?: string; // Auto-generated on upload if not provided
   name: string;
-  type: 'sbs' | 'regular';
+  type: "sbs" | "regular";
   sbs_config?: SBSConfig;
   targets?: RegularExerciseTargets; // For regular exercises: prescribed sets/reps/RIR
   lastSetIntensity?: string; // Last-Set Intensity Technique (e.g., "Drop set", "Myo-reps")
@@ -69,7 +69,7 @@ export interface SetLog {
 export interface ExerciseLog {
   exerciseId: string; // References ExerciseDefinition.id
   exerciseName: string;
-  type: 'sbs' | 'regular';
+  type: "sbs" | "regular";
   targetWeight?: number; // Calculated target for SBS
   targetReps?: number; // Target reps for SBS
   targetRIR?: number; // Target RIR for SBS
@@ -88,6 +88,7 @@ export interface WorkoutSession {
   completed: boolean;
   startedAt: Date;
   completedAt?: Date;
+  comment?: string; // User comment for this workout (e.g., gym location)
 }
 
 // ============ SBS Settings Types ============
@@ -99,21 +100,21 @@ export interface SetsPerWeekLogic {
   };
   adjustment: {
     above_range: {
-      action: 'increase_tm';
+      action: "increase_tm";
       value: number;
     };
     below_range: {
-      action: 'decrease_tm';
+      action: "decrease_tm";
       value: number;
     };
   };
 }
 
 export interface SBSSettings {
-  reps_at_percent: Record<string, Record<string, number> | 'default'>;
-  rir_cutoffs: Record<string, Record<string, number> | 'default'>;
-  intensity_schedule: Record<string, number[] | 'default'>;
-  sets_per_week_logic: Record<string, SetsPerWeekLogic | 'default'>;
+  reps_at_percent: Record<string, Record<string, number> | "default">;
+  rir_cutoffs: Record<string, Record<string, number> | "default">;
+  intensity_schedule: Record<string, number[] | "default">;
+  sets_per_week_logic: Record<string, SetsPerWeekLogic | "default">;
 }
 
 // ============ User Settings Types ============
@@ -124,7 +125,7 @@ export interface UserSettings {
   currentWeek?: number;
   currentDay?: string; // Active day name within the current week
   weightIncrement: number; // Default 2.5 for kg
-  unit: 'kg' | 'lb';
+  unit: "kg" | "lb";
 }
 
 // ============ Exercise History Types ============

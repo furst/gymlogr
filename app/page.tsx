@@ -15,6 +15,7 @@ import {
   saveUserSettings,
   saveWorkoutSession,
   getWorkoutSessionForDay,
+  getPreviousDayComment,
 } from "@/lib/db";
 import {
   getSBSPrescription,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/sbs-calculations";
 import type { Program, ExerciseLog, WorkoutSession } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 export default function WorkoutPage() {
   const [program, setProgram] = useState<Program | null>(null);
@@ -39,6 +41,7 @@ export default function WorkoutPage() {
   );
   const [contentKey, setContentKey] = useState(0); // For triggering re-animation
   const prevWeekRef = useRef(currentWeek);
+  const [previousComment, setPreviousComment] = useState<string | null>(null);
 
   const loadWorkoutSession = useCallback(
     async (
@@ -47,6 +50,14 @@ export default function WorkoutPage() {
       weekNumber: number,
       dayName: string
     ) => {
+      // Load previous comment for this day
+      const prevComment = await getPreviousDayComment(
+        programId,
+        dayName,
+        weekNumber
+      );
+      setPreviousComment(prevComment);
+
       const existing = await getWorkoutSessionForDay(
         programId,
         weekNumber,
@@ -241,6 +252,23 @@ export default function WorkoutPage() {
     }
   };
 
+  const handleCommentChange = async (comment: string) => {
+    if (!workoutSession) return;
+
+    const updatedSession = {
+      ...workoutSession,
+      comment,
+    };
+
+    setWorkoutSession(updatedSession);
+
+    try {
+      await saveWorkoutSession(updatedSession);
+    } catch (err) {
+      console.error("Failed to save comment:", err);
+    }
+  };
+
   if (loading) {
     return <WorkoutPageSkeleton />;
   }
@@ -328,6 +356,25 @@ export default function WorkoutPage() {
               value={day.name}
               className="space-y-4 mt-4 animate-fade-in"
             >
+              {/* Comment input */}
+              <div className="space-y-1">
+                <Input
+                  placeholder={
+                    previousComment
+                      ? `Previous: ${previousComment}`
+                      : "Add a comment (e.g., gym location)..."
+                  }
+                  value={workoutSession?.comment || ""}
+                  onChange={(e) => handleCommentChange(e.target.value)}
+                  className="text-sm"
+                />
+                {previousComment && !workoutSession?.comment && (
+                  <p className="text-xs text-muted-foreground px-1">
+                    Last time: {previousComment}
+                  </p>
+                )}
+              </div>
+
               {/* Stats bar */}
               <div className="flex items-center gap-2">
                 <Badge

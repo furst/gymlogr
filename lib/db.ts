@@ -1,34 +1,35 @@
-import Dexie, { type EntityTable } from 'dexie';
-import type { Program, WorkoutSession, UserSettings } from './types';
+import Dexie, { type EntityTable } from "dexie";
+import type { Program, WorkoutSession, UserSettings } from "./types";
 
 // Database schema with Dexie
 // This abstraction layer makes it easy to migrate to PostgreSQL later
 // by replacing these implementations with API calls
 
-interface ProgramRecord extends Omit<Program, 'id'> {
+interface ProgramRecord extends Omit<Program, "id"> {
   id: string;
 }
 
-interface WorkoutSessionRecord extends Omit<WorkoutSession, 'id'> {
+interface WorkoutSessionRecord extends Omit<WorkoutSession, "id"> {
   id: string;
 }
 
-interface UserSettingsRecord extends Omit<UserSettings, 'id'> {
+interface UserSettingsRecord extends Omit<UserSettings, "id"> {
   id: string;
 }
 
 class GymLogDatabase extends Dexie {
-  programs!: EntityTable<ProgramRecord, 'id'>;
-  workoutSessions!: EntityTable<WorkoutSessionRecord, 'id'>;
-  userSettings!: EntityTable<UserSettingsRecord, 'id'>;
+  programs!: EntityTable<ProgramRecord, "id">;
+  workoutSessions!: EntityTable<WorkoutSessionRecord, "id">;
+  userSettings!: EntityTable<UserSettingsRecord, "id">;
 
   constructor() {
-    super('GymLogr');
+    super("GymLogr");
 
     this.version(1).stores({
-      programs: 'id, name, createdAt',
-      workoutSessions: 'id, programId, date, weekNumber, [programId+weekNumber+dayName]',
-      userSettings: 'id',
+      programs: "id, name, createdAt",
+      workoutSessions:
+        "id, programId, date, weekNumber, [programId+weekNumber+dayName]",
+      userSettings: "id",
     });
   }
 }
@@ -61,7 +62,7 @@ export async function getProgram(id: string): Promise<Program | undefined> {
 }
 
 export async function getAllPrograms(): Promise<Program[]> {
-  return db.programs.orderBy('createdAt').reverse().toArray();
+  return db.programs.orderBy("createdAt").reverse().toArray();
 }
 
 export async function deleteProgram(id: string): Promise<void> {
@@ -70,7 +71,9 @@ export async function deleteProgram(id: string): Promise<void> {
 
 // ============ Workout Sessions API ============
 
-export async function saveWorkoutSession(session: WorkoutSession): Promise<string> {
+export async function saveWorkoutSession(
+  session: WorkoutSession
+): Promise<string> {
   const id = session.id || generateId();
 
   await db.workoutSessions.put({
@@ -81,16 +84,20 @@ export async function saveWorkoutSession(session: WorkoutSession): Promise<strin
   return id;
 }
 
-export async function getWorkoutSession(id: string): Promise<WorkoutSession | undefined> {
+export async function getWorkoutSession(
+  id: string
+): Promise<WorkoutSession | undefined> {
   return db.workoutSessions.get(id);
 }
 
-export async function getWorkoutSessionsForProgram(programId: string): Promise<WorkoutSession[]> {
+export async function getWorkoutSessionsForProgram(
+  programId: string
+): Promise<WorkoutSession[]> {
   return db.workoutSessions
-    .where('programId')
+    .where("programId")
     .equals(programId)
     .reverse()
-    .sortBy('date');
+    .sortBy("date");
 }
 
 export async function getWorkoutSessionForDay(
@@ -99,17 +106,15 @@ export async function getWorkoutSessionForDay(
   dayName: string
 ): Promise<WorkoutSession | undefined> {
   return db.workoutSessions
-    .where('[programId+weekNumber+dayName]')
+    .where("[programId+weekNumber+dayName]")
     .equals([programId, weekNumber, dayName])
     .first();
 }
 
-export async function getRecentWorkoutSessions(limit: number = 10): Promise<WorkoutSession[]> {
-  return db.workoutSessions
-    .orderBy('date')
-    .reverse()
-    .limit(limit)
-    .toArray();
+export async function getRecentWorkoutSessions(
+  limit: number = 10
+): Promise<WorkoutSession[]> {
+  return db.workoutSessions.orderBy("date").reverse().limit(limit).toArray();
 }
 
 // Get last logged data for a specific exercise (for regular exercises)
@@ -119,12 +124,15 @@ export async function getLastExerciseSets(
   exerciseName: string,
   programId?: string,
   excludeSessionId?: string
-): Promise<{ sets: Array<{ weight: number; reps: number; notes?: string }>; exerciseNotes?: string } | null> {
+): Promise<{
+  sets: Array<{ weight: number; reps: number; notes?: string }>;
+  exerciseNotes?: string;
+} | null> {
   const query = programId
-    ? db.workoutSessions.where('programId').equals(programId)
+    ? db.workoutSessions.where("programId").equals(programId)
     : db.workoutSessions;
 
-  const sessions = await query.reverse().sortBy('date');
+  const sessions = await query.reverse().sortBy("date");
 
   for (const session of sessions) {
     // Skip the current session
@@ -134,10 +142,10 @@ export async function getLastExerciseSets(
 
     for (const exercise of session.exercises) {
       if (exercise.exerciseName === exerciseName && exercise.sets.length > 0) {
-        const completedSets = exercise.sets.filter(s => s.completed);
+        const completedSets = exercise.sets.filter((s) => s.completed);
         if (completedSets.length > 0) {
           return {
-            sets: completedSets.map(s => ({
+            sets: completedSets.map((s) => ({
               weight: s.weight,
               reps: s.reps,
               notes: s.notes,
@@ -152,9 +160,38 @@ export async function getLastExerciseSets(
   return null;
 }
 
+// Get previous comment for a specific day name (e.g., "Day 3")
+// This looks for the most recent workout session with the same day name
+// that has a comment, excluding the current week
+export async function getPreviousDayComment(
+  programId: string,
+  dayName: string,
+  currentWeekNumber: number
+): Promise<string | null> {
+  const sessions = await db.workoutSessions
+    .where("programId")
+    .equals(programId)
+    .reverse()
+    .sortBy("date");
+
+  for (const session of sessions) {
+    // Skip current week's session
+    if (session.weekNumber === currentWeekNumber) {
+      continue;
+    }
+
+    // Check if this is the same day name and has a comment
+    if (session.dayName === dayName && session.comment) {
+      return session.comment;
+    }
+  }
+
+  return null;
+}
+
 // ============ User Settings API ============
 
-const USER_SETTINGS_ID = 'user-settings';
+const USER_SETTINGS_ID = "user-settings";
 
 export async function getUserSettings(): Promise<UserSettings> {
   const settings = await db.userSettings.get(USER_SETTINGS_ID);
@@ -163,14 +200,16 @@ export async function getUserSettings(): Promise<UserSettings> {
     // Return defaults
     return {
       weightIncrement: 2.5,
-      unit: 'kg',
+      unit: "kg",
     };
   }
 
   return settings;
 }
 
-export async function saveUserSettings(settings: Partial<UserSettings>): Promise<void> {
+export async function saveUserSettings(
+  settings: Partial<UserSettings>
+): Promise<void> {
   const current = await getUserSettings();
 
   await db.userSettings.put({

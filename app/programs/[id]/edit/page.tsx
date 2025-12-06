@@ -761,6 +761,17 @@ export default function EditProgramPage() {
               />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label>Notes (optional)</Label>
+            <Textarea
+              value={program.notes || ''}
+              onChange={(e) =>
+                setProgram({ ...program, notes: e.target.value || undefined })
+              }
+              placeholder="Notes displayed on the workout page (e.g., reminders, tips, focus areas)"
+              rows={2}
+            />
+          </div>
         </CardContent>
       </Card>
 

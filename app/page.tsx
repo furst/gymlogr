@@ -372,6 +372,13 @@ export default function WorkoutPage() {
         </Button>
       </div>
 
+      {/* Program Notes */}
+      {program.notes && (
+        <div className="px-3 py-2 bg-muted/50 rounded-lg border border-border/50 text-sm text-muted-foreground">
+          {program.notes}
+        </div>
+      )}
+
       {/* Day Tabs */}
       {weekData && (
         <Tabs value={activeDay} onValueChange={handleDayChange}>

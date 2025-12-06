@@ -28,7 +28,8 @@
     "Deadlift": "default",
     "OHP": "default",
     "Close Grip Bench": "default",
-    "Incline Press": "default"
+    "Incline Press": "default",
+    "Paused Squat": "default"
   },
   "rir_cutoffs": {
     "default": {
@@ -59,7 +60,8 @@
     "Deadlift": "default",
     "OHP": "default",
     "Close Grip Bench": "default",
-    "Incline Press": "default"
+    "Incline Press": "default",
+    "Paused Squat": "default"
   },
   "intensity_schedule": {
     "default": [
@@ -75,6 +77,10 @@
       0.7, 0.75, 0.8, 0.725, 0.775, 0.825, 0.75, 0.8, 0.85
     ],
     "Incline Press": [
+      0.6, 0.65, 0.7, 0.625, 0.675, 0.725, 0.65, 0.7, 0.75, 0.675, 0.725, 0.775,
+      0.7, 0.75, 0.8, 0.725, 0.775, 0.825, 0.75, 0.8, 0.85
+    ],
+    "Paused Squat": [
       0.6, 0.65, 0.7, 0.625, 0.675, 0.725, 0.65, 0.7, 0.75, 0.675, 0.725, 0.775,
       0.7, 0.75, 0.8, 0.725, 0.775, 0.825, 0.75, 0.8, 0.85
     ]
@@ -99,6 +105,7 @@
     "Squat": "default",
     "Bench Press": "default",
     "Close Grip Bench": "default",
-    "Incline Press": "default"
+    "Incline Press": "default",
+    "Paused Squat": "default"
   }
 }

@@ -1,130 +1,154 @@
-### Summary of `programreal2.json` – "SBS + Jeff"
+## Program Summary: SBS + Hyper
 
-- **Program name**: SBS + Jeff
-- **Description**: 21-week hypertrophy program (JSON currently defines explicit content for **weeks 1 and 2** only).
-- **Structure**: 5 training days per week, combining SBS-style main lifts (auto-regulated via RIR and intensity weeks) with traditional hypertrophy accessories (fixed sets/reps/RIR, sometimes with special last-set intensifiers). For example purposes the program is only 2 weeks. It will likely last 21 weeks in reality
+**Name:** SBS + hyper  
+**Description:** Strong by science + hypertrophy program (SBS + Jeff Nippard–style hypertrophy with some tweaks). This only contains 1 week but will later be around 12 weeks.
 
 ### Settings
 
-- **Maxes** (assumed in kg):
+- **Training maxes**
+  - **Squat:** 115 kg  
+  - **Bench Press:** 112.5 kg  
+  - **Deadlift:** 170 kg  
+  - **Overhead Press (OHP):** 62.5 kg  
+  - **Close Grip Bench:** 100 kg  
+  - **Incline Press:** 85 kg   
 
-  - Squat: 115
-  - Bench Press: 107.5
-  - Deadlift: 170
-  - OHP: 62.5
-  - Close Grip Bench: 95
-  - Incline Press: 85
+> **Note:** Exercises with `"type": "sbs"` are main strength lifts whose exact set/rep/intensity prescription is handled by an external SBS system using the above maxes and `intensity_week_index`. Accessories (`"type": "regular"`) define sets/reps and RIR directly below.
 
-### High-level weekly structure
+---
 
-- **Weeks defined**: 1 and 2.
-- **Days per week**: 5 (Day 1–Day 5).
-- **Main SBS lifts**: Squat, Bench Press, Deadlift, OHP, Close-Grip Bench Press, Incline Press.
-- **Accessory work**: Mix of legs, back, chest, delts, arms, and core using regular exercises with targets in `sets` / `reps` / `rir` strings.
-- **Progression between week 1 and week 2**:
-  - Exercise selection, targets, and ordering are **identical** between weeks 1 and 2.
-  - Only the `intensity_week_index` for each SBS lift changes from **0 (week 1)** to **1 (week 2)**.
+## Week 1 Overview
 
-### Week 1 – Day-by-day
+The program defines **Week 1** with **5 training days**.
 
-#### Day 1
+### Day 1 – Squat + Lower / Back / Calves / Abs
 
-- **Squat** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "Squat"`, `intensity_week_index = 0`
-  - Cue: focus on depth, chest up.
-- **Leg Press** (regular)
-  - Targets: 3 × 10–12 @ 1–2 RIR.
-- **Lean-back Lat Pulldown** (regular)
-  - Targets: 3 × 10–12 @ 1–2 RIR.
-  - Alternatives: Pull-up (with video link), Lean-Back Machine Pulldown.
-- **Standing Calf Raise** (regular)
-  - Targets: 3 × 12–15 @ 0–2 RIR.
-  - `lastSetIntensity`: Static Stretch (30s).
-- **Machine Crunch (BONUS)** (regular)
-  - Targets: 3 × 10–12 @ 0–1 RIR.
-  - Marked as **BONUS**, implying optional extra core volume.
+- **Squat** – `sbs` (main strength lift)  
+  - **Config:** `lift_key: Squat`, `intensity_week_index: 0`  
+  - **Cue:** Focus on depth, keep chest up.
 
-#### Day 2
+- **Leg Press** – regular hypertrophy  
+  - **Targets:** 3 sets × 10–12 reps, RIR 1–2  
+  - **Notes:** Controlled negative, explode on the positive.
 
-- **Bench Press** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "Bench Press"`, `intensity_week_index = 0`.
-- **Chest-Supported Machine Row** (regular)
-  - Targets: 3 × 10–12 @ 0–2 RIR.
-- **Pec Deck** (regular)
-  - Targets: 3 × 10–12 @ 1–2 RIR.
-- **Triceps Pressdown (bar)** (regular)
-  - Targets: 3 × 15–20 @ 0–1 RIR.
-  - Has `intensity = "Myo-reps"` (special intensifier, not stored as `lastSetIntensity`).
-- **Bayesian Curl** (regular)
-  - Targets: 3 × 10–12 @ 0–1 RIR.
-  - Includes detailed instructions for addressing left–right imbalances.
+- **Lean-back Lat Pulldown** – back width  
+  - **Targets:** 3 sets × 10–12 reps, RIR 1–2  
+  - **Notes:** Start upright, lean back 15–30° as you pull, touch bar softly to chest.  
+  - **Alternatives:** Pull-up; Lean-back machine pulldown.
 
-#### Day 3
+- **Standing Calf Raise** – calves  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–2  
+  - **Last-set intensity:** Static stretch 30s  
+  - **Notes:** 1–2 s pause at bottom; think about “rolling” on the balls of the feet.
 
-- **Deadlift** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "Deadlift"`, `intensity_week_index = 0`.
-  - Includes video link and bracing cues.
-- **Close-Grip Bench Press** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "Close Grip Bench"`, `intensity_week_index = 0`.
-- **Lying Leg Curl** (regular)
-  - Targets: 3 × 10–12 @ 0–1 RIR.
-  - `lastSetIntensity`: Failure + LLPs (Extend set).
-- **Back Extension** (regular)
-  - Targets: 3 × 8–10 @ 0–1 RIR.
+- **Machine Crunch (Bonus)** – abs  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–1  
+  - **Notes:** Round lower back, focus on ab mind–muscle connection.
 
-#### Day 4
+---
 
-- **OHP** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "OHP"`, `intensity_week_index = 0`.
-  - Strict press cue (no leg drive) with video link.
-- **Single-Arm DB Row** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
-  - `lastSetIntensity`: Failure + LLPs (Extend set).
-- **Cable Lateral Raise** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
-  - `lastSetIntensity`: Myo-reps.
-- **Face Pulls** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
-- **EZ Bar Skull Crusher** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
+### Day 2 – Bench + Push/Pull (Chest, Back, Arms)
 
-#### Day 5
+- **Bench Press** – `sbs` (main strength lift)  
+  - **Config:** `lift_key: Bench Press`, `intensity_week_index: 0`  
 
-- **Incline Press** (SBS)
-  - `type`: `sbs`
-  - `sbs_config`: `lift_key = "Incline Press"`, `intensity_week_index = 0`.
-  - Cue: 45° angle, controlled descent.
-- **Dual-Handle Lat Pulldown** (regular)
-  - Targets: 3 × 10–12 @ 1–2 RIR.
-- **Hammer Curl** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
-- **DB Concentration Curl (BONUS)** (regular)
-  - Targets: 3 × 15–20 @ 0–1 RIR.
-  - `lastSetIntensity`: Myo-reps.
-- **Ab Wheel Rollout** (regular)
-  - Targets: 3 × 12–15 @ 0–1 RIR.
+- **Chest-Supported Machine Row** – upper back  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–2  
+  - **Notes:** Elbows ~45°, hard scap squeeze at top.  
+  - **Link:** `youtube.com/watch?si=ADBJRkNSajLiVayN&v=ijsSiWSzYw0&feature=youtu.be`
 
-### Week 2 – Day-by-day
+- **Pec Deck** – chest  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–2  
+  - **Notes:** Focus on bringing elbows together, not hands.
 
-**Week 2 mirrors Week 1** in exercise selection, ordering, descriptions, and accessory targets. The only difference is the progression of SBS intensity weeks.
+- **Triceps Pressdown (bar)** – triceps  
+  - **Targets:** 3 sets × 15–20 reps, RIR 0–1  
+  - **Last-set intensity:** Myo-reps every other week  
+  - **Notes:** Emphasize triceps squeeze to move weight.
 
-- **General pattern**: For each SBS main lift, `intensity_week_index` is set to **1** instead of **0**, indicating the second week in the SBS intensity schedule.
+- **Bayesian Curl** – biceps  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–1  
+  - **Last-set intensity:** Myo-reps every other week  
+  - **Notes:**  
+    - If asymmetry: do 1 arm at a time, start with weaker side to RIR target, then match reps with stronger side.  
+    - If no imbalance: do both arms together.
 
-#### Day 1–5 in Week 2
+---
 
-- **Day 1**: Same exercises and targets as Week 1 Day 1, but:
-  - **Squat** `sbs_config.intensity_week_index = 1`.
-- **Day 2**: Same as Week 1 Day 2, but:
-  - **Bench Press** `sbs_config.intensity_week_index = 1`.
-- **Day 3**: Same as Week 1 Day 3, but:
-  - **Deadlift** `sbs_config.intensity_week_index = 1`.
-  - **Close-Grip Bench Press** `sbs_config.intensity_week_index = 1`.
-- **Day 4**: Same as Week 1 Day 4, but:
-  - **OHP** `sbs_config.intensity_week_index = 1`.
-- **Day 5**: Same as Week 1 Day 5, but:
-  - **Incline Press** `sbs_config.intensity_week_index = 1`.
+### Day 3 – Deadlift + Hamstrings/Glutes + Biceps
+
+- **Deadlift** – `sbs` (main strength lift)  
+  - **Config:** `lift_key: Deadlift`, `intensity_week_index: 0`  
+  - **Notes:** Brace, push through floor, hips/shoulders rise together.  
+  - **Link:** `https://www.youtube.com/watch?v=op9kVnSso6Q`
+
+- **Lying Leg Curl** – hamstrings  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–1  
+  - **Last-set intensity:** Failure + LLPs (extended set) every other week  
+  - **Notes:** Max stretch at bottom, avoid hips/butt lifting.
+
+- **Back Extension** – posterior chain  
+  - **Targets:** 3 sets × 8–10 reps, RIR 0–1  
+  - **Notes:** Squeeze glutes at top, slow negative, explosive positive.
+
+- **Hammer Curl** – biceps/brachialis  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–1  
+  - **Notes:** Squeeze handle hard, smooth controlled reps.
+
+- **DB Concentration Curl** – biceps  
+  - **Targets:** 3 sets × 15–20 reps, RIR 0–1  
+  - **Last-set intensity:** Myo-reps every other week  
+  - **Notes:** Strong mind–muscle connection, controlled reps.
+
+---
+
+### Day 4 – OHP + Upper Back/Delts/Triceps
+
+- **OHP (Overhead Press)** – `sbs` (main strength lift)  
+  - **Config:** `lift_key: OHP`, `intensity_week_index: 0`  
+  - **Notes:** Strict press, no leg drive, full lockout.  
+  - **Link:** `https://www.youtube.com/watch?v=2yjwXTZQDDI`
+
+- **Single-Arm DB Row** – lats/upper back  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–1  
+  - **Last-set intensity:** Failure + LLPs every other week  
+  - **Notes:** Elbows ~45°, smooth, controlled reps.
+
+- **Cable Lateral Raise** – lateral delts  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–1  
+  - **Last-set intensity:** Myo-reps  
+  - **Notes:** Focus on lateral delt squeeze.
+
+- **Face Pulls** – rear delts/upper back  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–1  
+  - **Notes:** Emphasis on upper back / rear delt squeeze (cue text is slightly garbled in JSON).
+
+- **Overhead Cable Triceps Extension (Bar)** – triceps  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–1  
+  - **Notes:** Optional 0.5–1 s pause in stretched position.
+
+---
+
+### Day 5 – Incline + Close-Grip + Back/Legs/Abs
+
+- **Incline Press** – `sbs` (main strength lift)  
+  - **Config:** `lift_key: Incline Press`, `intensity_week_index: 0`  
+  - **Notes:** ~45° bench angle, controlled descent.
+
+- **Close-Grip Bench Press** – `sbs` (secondary strength lift)  
+  - **Config:** `lift_key: Close Grip Bench`, `intensity_week_index: 0`  
+
+- **Dual-Handle Lat Pulldown** – back  
+  - **Targets:** 3 sets × 10–12 reps, RIR 1–2  
+  - **Notes:** Lean back ~15°, drive elbows down, mix of lats and mid-traps.
+
+- **Leg Extension** – quads  
+  - **Targets:** 3 sets × 10–12 reps, RIR 0–2  
+  - **Last-set intensity:** Myo-reps every other week  
+  - **Notes:** Seat back far, pull butt into seat, 2–3 s negatives, focus on quad stretch.
+
+- **Ab Wheel Rollout** – core  
+  - **Targets:** 3 sets × 12–15 reps, RIR 0–1  
+  - **Notes:** Use abs (not just hip hinge), control ROM, progress ROM over time if needed.
+
+

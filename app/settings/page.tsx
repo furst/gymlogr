@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getUserSettings, saveUserSettings, clearAllData } from "@/lib/db";
-import type { UserSettings } from "@/lib/types";
+import { Textarea } from "@/components/ui/textarea";
+import { getUserSettings, saveUserSettings, clearAllData, getProgram, saveProgram } from "@/lib/db";
+import type { UserSettings, Program } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -21,13 +22,26 @@ export default function SettingsPage() {
     weightIncrement: 2.5,
     unit: "kg",
   });
+  const [activeProgram, setActiveProgram] = useState<Program | null>(null);
+  const [programNotes, setProgramNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [savedNotes, setSavedNotes] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
       const data = await getUserSettings();
       setSettings(data);
+      
+      // Load active program for notes editing
+      if (data.activeProgramId) {
+        const program = await getProgram(data.activeProgramId);
+        if (program) {
+          setActiveProgram(program);
+          setProgramNotes(program.notes || "");
+        }
+      }
     };
     loadSettings();
   }, []);
@@ -42,6 +56,25 @@ export default function SettingsPage() {
       console.error("Failed to save settings:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!activeProgram) return;
+    
+    setSavingNotes(true);
+    try {
+      await saveProgram({
+        ...activeProgram,
+        notes: programNotes || undefined,
+      });
+      setActiveProgram({ ...activeProgram, notes: programNotes || undefined });
+      setSavedNotes(true);
+      setTimeout(() => setSavedNotes(false), 2000);
+    } catch (err) {
+      console.error("Failed to save program notes:", err);
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -118,9 +151,50 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Program Notes */}
+      {activeProgram && (
+        <Card className="animate-slide-up" style={{ animationDelay: "50ms" }}>
+          <CardHeader>
+            <CardTitle>Program Notes</CardTitle>
+            <CardDescription>
+              Notes for &quot;{activeProgram.name}&quot; - displayed on the workout page
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add notes about your program (e.g., reminders, tips, focus areas)..."
+                value={programNotes}
+                onChange={(e) => setProgramNotes(e.target.value)}
+                rows={3}
+                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <Button
+              onClick={handleSaveNotes}
+              disabled={savingNotes}
+              className={cn(
+                "press-effect transition-all duration-300",
+                savedNotes && "bg-green-600 hover:bg-green-600"
+              )}
+            >
+              {savedNotes ? (
+                <Check className="h-4 w-4 mr-2 animate-scale-in" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {savingNotes ? "Saving..." : savedNotes ? "Saved!" : "Save Notes"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card
         className="border-destructive/50 animate-slide-up"
-        style={{ animationDelay: "50ms" }}
+        style={{ animationDelay: activeProgram ? "100ms" : "50ms" }}
       >
         <CardHeader>
           <CardTitle className="text-destructive flex items-center gap-2">

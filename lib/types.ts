@@ -49,6 +49,7 @@ export interface Program {
   id?: string; // Generated when saved to DB
   name: string;
   description?: string;
+  notes?: string; // General notes visible on workout page (e.g., program tips, reminders)
   settings: ProgramSettings;
   weeks: ProgramWeek[];
   createdAt?: Date;

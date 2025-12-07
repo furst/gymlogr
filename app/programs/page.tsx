@@ -122,6 +122,41 @@ export default function ProgramsPage() {
     }
   };
 
+  const handleImportProgramReal2 = async () => {
+    setError(null);
+
+    try {
+      const response = await fetch("/programreal2.json");
+      if (!response.ok) {
+        throw new Error("Failed to load programreal2.json");
+      }
+
+      const rawProgram = (await response.json()) as Program;
+
+      if (
+        !rawProgram.name ||
+        !rawProgram.settings?.maxes ||
+        !rawProgram.weeks
+      ) {
+        throw new Error(
+          "Invalid program format. Required: name, settings.maxes, weeks"
+        );
+      }
+
+      const program = processProgram(rawProgram);
+
+      await saveProgram(program);
+      await loadData();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to import programreal2.json"
+      );
+      console.error(err);
+    }
+  };
+
   const handleSetActive = async (programId: string) => {
     await saveUserSettings({ activeProgramId: programId, currentWeek: 1 });
     setActiveProgramId(programId);
@@ -189,21 +224,31 @@ export default function ProgramsPage() {
             Upload and manage your training programs
           </p>
         </div>
-        <label htmlFor="file-upload">
-          <Button asChild className="press-effect">
-            <span>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Program
-            </span>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleImportProgramReal2}
+            variant="outline"
+            className="press-effect"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import Default Program
           </Button>
-          <input
-            id="file-upload"
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={handleFileUpload}
-          />
-        </label>
+          <label htmlFor="file-upload">
+            <Button asChild className="press-effect">
+              <span>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Program
+              </span>
+            </Button>
+            <input
+              id="file-upload"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+          </label>
+        </div>
       </div>
 
       {error && (

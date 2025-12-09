@@ -33,6 +33,7 @@ export interface ExerciseDefinition {
   description?: string; // Description of the exercise (from program)
   link?: string; // Video/tutorial link for main exercise
   alternatives?: AlternativeExercise[]; // Alternative exercises if machine is occupied
+  restTime?: string; // Rest time between sets (e.g., "2 min", "90 sec")
 }
 
 export interface WorkoutDay {

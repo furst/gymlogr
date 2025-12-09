@@ -461,6 +461,7 @@ export default function WorkoutPage() {
                         description={exercise.description}
                         link={exercise.link}
                         alternatives={exercise.alternatives}
+                        restTime={exercise.restTime}
                         onUpdateLog={(log) =>
                           handleUpdateExerciseLog(exercise.id!, log)
                         }
@@ -479,6 +480,7 @@ export default function WorkoutPage() {
                       link={exercise.link}
                       alternatives={exercise.alternatives}
                       targets={exercise.targets}
+                      restTime={exercise.restTime}
                       programId={workoutSession?.programId}
                       weekNumber={currentWeek}
                       dayName={activeDay}

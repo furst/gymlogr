@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
   Check,
+  Timer,
 } from "lucide-react";
 import type { ExerciseLog, AlternativeExercise } from "@/lib/types";
 import type { SBSPrescription } from "@/lib/sbs-calculations";
@@ -27,6 +28,7 @@ interface SBSExerciseCardProps {
   description?: string;
   link?: string;
   alternatives?: AlternativeExercise[];
+  restTime?: string;
   onUpdateLog: (log: ExerciseLog) => void;
   index?: number; // For staggered animation
 }
@@ -39,6 +41,7 @@ export function SBSExerciseCard({
   description,
   link,
   alternatives,
+  restTime,
   onUpdateLog,
   index = 0,
 }: SBSExerciseCardProps) {
@@ -177,6 +180,12 @@ export function SBSExerciseCard({
             )}
             {description && (
               <p className="text-sm text-muted-foreground">{description}</p>
+            )}
+            {restTime && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Timer className="h-3 w-3" />
+                <span className="font-medium text-foreground">{restTime}</span>
+              </div>
             )}
           </div>
           {/* Compact progress indicator in header */}

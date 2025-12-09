@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Pencil,
   Check,
+  Timer,
 } from "lucide-react";
 import { getLastExerciseSets } from "@/lib/db";
 import type {
@@ -39,6 +40,7 @@ interface RegularExerciseCardProps {
   link?: string;
   alternatives?: AlternativeExercise[];
   targets?: RegularExerciseTargets;
+  restTime?: string;
   programId?: string;
   weekNumber?: number;
   dayName?: string;
@@ -54,6 +56,7 @@ export function RegularExerciseCard({
   link,
   alternatives,
   targets,
+  restTime,
   programId,
   weekNumber,
   dayName,
@@ -280,7 +283,7 @@ export function RegularExerciseCard({
 
         {/* Targets Display */}
         {hasTargets && (
-          <div className="mt-2 flex gap-4 text-sm">
+          <div className="mt-2 flex gap-4 text-sm flex-wrap">
             {targets.sets && (
               <span className="text-muted-foreground">
                 <span className="font-medium text-foreground">
@@ -305,6 +308,22 @@ export function RegularExerciseCard({
                 </span>
               </span>
             )}
+            {restTime && (
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Timer className="h-3 w-3" />
+                <span className="font-medium text-foreground">{restTime}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Rest Time Display (when no other targets) */}
+        {!hasTargets && restTime && (
+          <div className="mt-2 flex gap-4 text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Timer className="h-3 w-3" />
+              <span className="font-medium text-foreground">{restTime}</span>
+            </span>
           </div>
         )}
 

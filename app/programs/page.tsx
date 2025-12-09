@@ -30,6 +30,7 @@ import {
   deleteProgram,
   getUserSettings,
   saveUserSettings,
+  getProgram,
 } from "@/lib/db";
 import type { Program } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -118,6 +119,57 @@ export default function ProgramsPage() {
       setError(
         err instanceof Error ? err.message : "Failed to parse program file"
       );
+      console.error(err);
+    }
+  };
+
+  const handleReplaceSquatWithSmithMachine = async () => {
+    if (!activeProgramId) {
+      setError("No active program selected");
+      return;
+    }
+
+    try {
+      const program = await getProgram(activeProgramId);
+      if (!program) {
+        setError("Active program not found");
+        return;
+      }
+
+      const updatedProgram: Program = {
+        ...program,
+        weeks: program.weeks.map((week) => ({
+          ...week,
+          days: week.days.map((day) => ({
+            ...day,
+            exercises: day.exercises.map((exercise) => {
+              if (exercise.name === "Squat") {
+                return {
+                  ...exercise,
+                  name: "Smith Machine Squat",
+                  type: "regular" as const,
+                  sbs_config: undefined,
+                  targets: {
+                    sets: "3",
+                    reps: "6-8",
+                    rir: "1-2",
+                  },
+                  restTime: "3-5 min",
+                  description: "Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.",
+                  link: "https://youtube.com/watch?v=J2D2J7RO_tA&feature=youtu.be",
+                };
+              }
+              return exercise;
+            }),
+          })),
+        })),
+      };
+
+      await saveProgram(updatedProgram);
+      await loadData();
+      alert("Squat replaced with Smith Machine Squat!");
+    } catch (err) {
+      setError("Failed to replace exercise");
       console.error(err);
     }
   };
@@ -224,7 +276,15 @@ export default function ProgramsPage() {
             Upload and manage your training programs
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            onClick={handleReplaceSquatWithSmithMachine}
+            variant="outline"
+            className="press-effect"
+            disabled={!activeProgramId}
+          >
+            Replace Squat
+          </Button>
           <Button
             onClick={handleImportProgramReal2}
             variant="outline"

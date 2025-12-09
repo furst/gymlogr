@@ -129,6 +129,31 @@ export default function ProgramsPage() {
       return;
     }
 
+    // Default rest times for exercises
+    const defaultRestTimes: Record<string, string> = {
+      "Leg Press": "2-3 min",
+      "Back Extension": "2-3 min",
+      "Lean-back Lat Pulldown": "2-3 min",
+      "Lean-Back Machine Pulldown": "2-3 min",
+      "Standing Calf Raise": "1-2 min",
+      "Chest-Supported Machine Row": "2-3 min",
+      "Pec Deck": "1-2 min",
+      "Triceps Pressdown(bar)": "1-2 min",
+      "Ab Wheel Rollout": "1-2 min",
+      "Lying Leg Curl": "1-2 min",
+      "Hammer Curl": "1-2 min",
+      "Hammer Preacher Curl": "1-2 min",
+      "DB concentration curl": "1-2 min",
+      "Single-Arm DB Row": "2-3 min",
+      "Cable Lateral Raise": "1-2 min",
+      "Face Pulls": "1-2 min",
+      "Overhead Cable Triceps Extension (Bar)": "1-2 min",
+      "Machine Crunch(BONUS)": "1-2 min",
+      "Dual-Handle Lat Pulldown": "2-3 min",
+      "Leg Extension": "1-2 min",
+      "Bayesian Curl": "1-2 min",
+    };
+
     try {
       const program = await getProgram(activeProgramId);
       if (!program) {
@@ -157,6 +182,14 @@ export default function ProgramsPage() {
                   restTime: "3-5 min",
                   description: "Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.",
                   link: "https://youtube.com/watch?v=J2D2J7RO_tA&feature=youtu.be",
+                };
+              }
+              // Add default rest time if exercise matches and doesn't already have one
+              const defaultRest = defaultRestTimes[exercise.name];
+              if (defaultRest && !exercise.restTime) {
+                return {
+                  ...exercise,
+                  restTime: defaultRest,
                 };
               }
               return exercise;

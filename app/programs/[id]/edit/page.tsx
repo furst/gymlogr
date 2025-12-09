@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
   Save,
@@ -12,34 +12,34 @@ import {
   ChevronRight,
   ExternalLink,
   Copy,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { getProgram, saveProgram } from '@/lib/db';
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { getProgram, saveProgram } from "@/lib/db";
 import type {
   Program,
   ProgramWeek,
   WorkoutDay,
   ExerciseDefinition,
   AlternativeExercise,
-} from '@/lib/types';
+} from "@/lib/types";
 
 // Generate unique ID for exercises
 function generateExerciseId(): string {
@@ -66,11 +66,18 @@ function AlternativeExerciseEditor({
         />
         <Input
           placeholder="Link (optional)"
-          value={alternative.link || ''}
-          onChange={(e) => onUpdate({ ...alternative, link: e.target.value || undefined })}
+          value={alternative.link || ""}
+          onChange={(e) =>
+            onUpdate({ ...alternative, link: e.target.value || undefined })
+          }
         />
       </div>
-      <Button size="icon" variant="ghost" onClick={onRemove} className="text-destructive">
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={onRemove}
+        className="text-destructive"
+      >
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
@@ -103,19 +110,24 @@ function ExerciseEditor({
   };
 
   const addAlternative = () => {
-    const newAlternatives = [...(exercise.alternatives || []), { name: '' }];
-    updateField('alternatives', newAlternatives);
+    const newAlternatives = [...(exercise.alternatives || []), { name: "" }];
+    updateField("alternatives", newAlternatives);
   };
 
   const updateAlternative = (index: number, alt: AlternativeExercise) => {
     const newAlternatives = [...(exercise.alternatives || [])];
     newAlternatives[index] = alt;
-    updateField('alternatives', newAlternatives);
+    updateField("alternatives", newAlternatives);
   };
 
   const removeAlternative = (index: number) => {
-    const newAlternatives = (exercise.alternatives || []).filter((_, i) => i !== index);
-    updateField('alternatives', newAlternatives.length > 0 ? newAlternatives : undefined);
+    const newAlternatives = (exercise.alternatives || []).filter(
+      (_, i) => i !== index
+    );
+    updateField(
+      "alternatives",
+      newAlternatives.length > 0 ? newAlternatives : undefined
+    );
   };
 
   return (
@@ -130,10 +142,16 @@ function ExerciseEditor({
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-              <span className="text-sm text-muted-foreground">{exerciseIndex + 1}.</span>
-              <CardTitle className="text-base flex-1">{exercise.name || 'New Exercise'}</CardTitle>
-              <Badge variant={exercise.type === 'sbs' ? 'default' : 'secondary'}>
-                {exercise.type === 'sbs' ? 'SBS' : 'Regular'}
+              <span className="text-sm text-muted-foreground">
+                {exerciseIndex + 1}.
+              </span>
+              <CardTitle className="text-base flex-1">
+                {exercise.name || "New Exercise"}
+              </CardTitle>
+              <Badge
+                variant={exercise.type === "sbs" ? "default" : "secondary"}
+              >
+                {exercise.type === "sbs" ? "SBS" : "Regular"}
               </Badge>
               <Button
                 size="icon"
@@ -169,7 +187,7 @@ function ExerciseEditor({
                 <Label>Exercise Name</Label>
                 <Input
                   value={exercise.name}
-                  onChange={(e) => updateField('name', e.target.value)}
+                  onChange={(e) => updateField("name", e.target.value)}
                   placeholder="e.g., Squat, Bench Press"
                 />
               </div>
@@ -177,13 +195,19 @@ function ExerciseEditor({
                 <Label>Type</Label>
                 <Select
                   value={exercise.type}
-                  onValueChange={(value: 'sbs' | 'regular') => {
-                    const updated: ExerciseDefinition = { ...exercise, type: value };
-                    if (value === 'sbs') {
-                      updated.sbs_config = { lift_key: exercise.name, intensity_week_index: 0 };
+                  onValueChange={(value: "sbs" | "regular") => {
+                    const updated: ExerciseDefinition = {
+                      ...exercise,
+                      type: value,
+                    };
+                    if (value === "sbs") {
+                      updated.sbs_config = {
+                        lift_key: exercise.name,
+                        intensity_week_index: 0,
+                      };
                       delete updated.targets;
                     } else {
-                      updated.targets = { sets: '3', reps: '10', rir: '2' };
+                      updated.targets = { sets: "3", reps: "10", rir: "2" };
                       delete updated.sbs_config;
                     }
                     onUpdate(updated);
@@ -201,14 +225,17 @@ function ExerciseEditor({
             </div>
 
             {/* SBS Config */}
-            {exercise.type === 'sbs' && exercise.sbs_config && (
+            {exercise.type === "sbs" && exercise.sbs_config && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/50 rounded-md">
                 <div className="space-y-2">
                   <Label>Lift Key (for SBS settings lookup)</Label>
                   <Select
                     value={exercise.sbs_config.lift_key}
                     onValueChange={(value) =>
-                      updateField('sbs_config', { ...exercise.sbs_config!, lift_key: value })
+                      updateField("sbs_config", {
+                        ...exercise.sbs_config!,
+                        lift_key: value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -230,7 +257,7 @@ function ExerciseEditor({
                     min="0"
                     value={exercise.sbs_config.intensity_week_index}
                     onChange={(e) =>
-                      updateField('sbs_config', {
+                      updateField("sbs_config", {
                         ...exercise.sbs_config!,
                         intensity_week_index: parseInt(e.target.value) || 0,
                       })
@@ -241,14 +268,17 @@ function ExerciseEditor({
             )}
 
             {/* Regular Exercise Targets */}
-            {exercise.type === 'regular' && (
+            {exercise.type === "regular" && (
               <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-md">
                 <div className="space-y-2">
                   <Label>Sets</Label>
                   <Input
-                    value={exercise.targets?.sets || ''}
+                    value={exercise.targets?.sets || ""}
                     onChange={(e) =>
-                      updateField('targets', { ...exercise.targets, sets: e.target.value })
+                      updateField("targets", {
+                        ...exercise.targets,
+                        sets: e.target.value,
+                      })
                     }
                     placeholder="e.g., 3"
                   />
@@ -256,9 +286,12 @@ function ExerciseEditor({
                 <div className="space-y-2">
                   <Label>Reps</Label>
                   <Input
-                    value={exercise.targets?.reps || ''}
+                    value={exercise.targets?.reps || ""}
                     onChange={(e) =>
-                      updateField('targets', { ...exercise.targets, reps: e.target.value })
+                      updateField("targets", {
+                        ...exercise.targets,
+                        reps: e.target.value,
+                      })
                     }
                     placeholder="e.g., 8-12"
                   />
@@ -266,9 +299,12 @@ function ExerciseEditor({
                 <div className="space-y-2">
                   <Label>RIR</Label>
                   <Input
-                    value={exercise.targets?.rir || ''}
+                    value={exercise.targets?.rir || ""}
                     onChange={(e) =>
-                      updateField('targets', { ...exercise.targets, rir: e.target.value })
+                      updateField("targets", {
+                        ...exercise.targets,
+                        rir: e.target.value,
+                      })
                     }
                     placeholder="e.g., 2"
                   />
@@ -280,8 +316,10 @@ function ExerciseEditor({
             <div className="space-y-2">
               <Label>Last Set Intensity Technique (optional)</Label>
               <Input
-                value={exercise.lastSetIntensity || ''}
-                onChange={(e) => updateField('lastSetIntensity', e.target.value || undefined)}
+                value={exercise.lastSetIntensity || ""}
+                onChange={(e) =>
+                  updateField("lastSetIntensity", e.target.value || undefined)
+                }
                 placeholder="e.g., Drop set, Myo-reps, AMRAP"
               />
             </div>
@@ -290,8 +328,10 @@ function ExerciseEditor({
             <div className="space-y-2">
               <Label>Description / Form Cues (optional)</Label>
               <Textarea
-                value={exercise.description || ''}
-                onChange={(e) => updateField('description', e.target.value || undefined)}
+                value={exercise.description || ""}
+                onChange={(e) =>
+                  updateField("description", e.target.value || undefined)
+                }
                 placeholder="Notes about form, tempo, or execution"
                 rows={2}
               />
@@ -302,18 +342,36 @@ function ExerciseEditor({
               <Label>Video/Tutorial Link (optional)</Label>
               <div className="flex gap-2">
                 <Input
-                  value={exercise.link || ''}
-                  onChange={(e) => updateField('link', e.target.value || undefined)}
+                  value={exercise.link || ""}
+                  onChange={(e) =>
+                    updateField("link", e.target.value || undefined)
+                  }
                   placeholder="https://..."
                 />
                 {exercise.link && (
                   <Button size="icon" variant="outline" asChild>
-                    <a href={exercise.link} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={exercise.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>
                 )}
               </div>
+            </div>
+
+            {/* Rest Time */}
+            <div className="space-y-2">
+              <Label>Rest Time Between Sets (optional)</Label>
+              <Input
+                value={exercise.restTime || ""}
+                onChange={(e) =>
+                  updateField("restTime", e.target.value || undefined)
+                }
+                placeholder="e.g., 2 min, 90 sec, 2-3 min"
+              />
             </div>
 
             {/* Alternatives */}
@@ -361,14 +419,14 @@ function DayEditor({
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const addExercise = (type: 'sbs' | 'regular') => {
+  const addExercise = (type: "sbs" | "regular") => {
     const newExercise: ExerciseDefinition = {
       id: generateExerciseId(),
-      name: '',
+      name: "",
       type,
-      ...(type === 'sbs'
-        ? { sbs_config: { lift_key: '', intensity_week_index: 0 } }
-        : { targets: { sets: '3', reps: '10', rir: '2' } }),
+      ...(type === "sbs"
+        ? { sbs_config: { lift_key: "", intensity_week_index: 0 } }
+        : { targets: { sets: "3", reps: "10", rir: "2" } }),
     };
     onUpdate({ ...day, exercises: [...day.exercises, newExercise] });
   };
@@ -417,7 +475,7 @@ function DayEditor({
                 className="text-destructive"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (confirm('Delete this day and all its exercises?')) {
+                  if (confirm("Delete this day and all its exercises?")) {
                     onRemove();
                   }
                 }}
@@ -459,11 +517,11 @@ function DayEditor({
 
             {/* Add Exercise Buttons */}
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => addExercise('sbs')}>
+              <Button variant="outline" onClick={() => addExercise("sbs")}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add SBS Exercise
               </Button>
-              <Button variant="outline" onClick={() => addExercise('regular')}>
+              <Button variant="outline" onClick={() => addExercise("regular")}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add Regular Exercise
               </Button>
@@ -523,7 +581,9 @@ function WeekEditor({
               ) : (
                 <ChevronRight className="h-5 w-5" />
               )}
-              <CardTitle className="text-xl flex-1">Week {week.week_number}</CardTitle>
+              <CardTitle className="text-xl flex-1">
+                Week {week.week_number}
+              </CardTitle>
               <Badge>{week.days.length} days</Badge>
               <Button
                 size="sm"
@@ -542,7 +602,7 @@ function WeekEditor({
                 className="text-destructive"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (confirm('Delete this week and all its days?')) {
+                  if (confirm("Delete this week and all its days?")) {
                     onRemove();
                   }
                 }}
@@ -595,20 +655,20 @@ export default function EditProgramPage() {
       try {
         const prog = await getProgram(programId);
         if (!prog) {
-          setError('Program not found');
+          setError("Program not found");
           return;
         }
         setProgram(prog);
 
         // Load SBS lift keys from settings
-        const res = await fetch('/sbs_settings.json');
+        const res = await fetch("/sbs_settings.json");
         const sbsSettings = await res.json();
         const keys = Object.keys(sbsSettings.intensity_schedule || {}).filter(
-          (k) => k !== 'default'
+          (k) => k !== "default"
         );
         setSbsLiftKeys(keys);
       } catch (err) {
-        setError('Failed to load program');
+        setError("Failed to load program");
         console.error(err);
       } finally {
         setLoading(false);
@@ -623,9 +683,9 @@ export default function EditProgramPage() {
     setSaving(true);
     try {
       await saveProgram(program);
-      router.push('/programs');
+      router.push("/programs");
     } catch (err) {
-      setError('Failed to save program');
+      setError("Failed to save program");
       console.error(err);
     } finally {
       setSaving(false);
@@ -711,8 +771,10 @@ export default function EditProgramPage() {
   if (error || !program) {
     return (
       <div className="space-y-4">
-        <div className="p-4 bg-destructive/10 text-destructive rounded-md">{error}</div>
-        <Button variant="outline" onClick={() => router.push('/programs')}>
+        <div className="p-4 bg-destructive/10 text-destructive rounded-md">
+          {error}
+        </div>
+        <Button variant="outline" onClick={() => router.push("/programs")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Programs
         </Button>
@@ -725,7 +787,7 @@ export default function EditProgramPage() {
       {/* Header */}
       <div className="flex items-center justify-between sticky top-0 bg-background py-4 z-10 border-b">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.push('/programs')}>
+          <Button variant="ghost" onClick={() => router.push("/programs")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -733,7 +795,7 @@ export default function EditProgramPage() {
         </div>
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
 
@@ -748,15 +810,20 @@ export default function EditProgramPage() {
               <Label>Program Name</Label>
               <Input
                 value={program.name}
-                onChange={(e) => setProgram({ ...program, name: e.target.value })}
+                onChange={(e) =>
+                  setProgram({ ...program, name: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>Description (optional)</Label>
               <Input
-                value={program.description || ''}
+                value={program.description || ""}
                 onChange={(e) =>
-                  setProgram({ ...program, description: e.target.value || undefined })
+                  setProgram({
+                    ...program,
+                    description: e.target.value || undefined,
+                  })
                 }
               />
             </div>
@@ -764,7 +831,7 @@ export default function EditProgramPage() {
           <div className="space-y-2">
             <Label>Notes (optional)</Label>
             <Textarea
-              value={program.notes || ''}
+              value={program.notes || ""}
               onChange={(e) =>
                 setProgram({ ...program, notes: e.target.value || undefined })
               }
@@ -786,11 +853,11 @@ export default function EditProgramPage() {
                 placeholder="Add new lift..."
                 className="w-40"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     const input = e.target as HTMLInputElement;
                     if (input.value.trim()) {
                       addMax(input.value.trim());
-                      input.value = '';
+                      input.value = "";
                     }
                   }
                 }}
@@ -799,10 +866,12 @@ export default function EditProgramPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const input = document.getElementById('new-max-input') as HTMLInputElement;
+                  const input = document.getElementById(
+                    "new-max-input"
+                  ) as HTMLInputElement;
                   if (input?.value.trim()) {
                     addMax(input.value.trim());
-                    input.value = '';
+                    input.value = "";
                   }
                 }}
               >
@@ -822,7 +891,9 @@ export default function EditProgramPage() {
                       type="number"
                       step="2.5"
                       value={weight}
-                      onChange={(e) => updateMax(lift, parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        updateMax(lift, parseFloat(e.target.value) || 0)
+                      }
                       className="h-8"
                     />
                     <span className="text-xs text-muted-foreground">kg</span>

@@ -4,10 +4,10 @@
   "notes": "RIR 0 is only for the last set and when you feel good. Be careful with going to failure in general and only do this on isolated exercises.",
   "settings": {
     "maxes": {
-      "Squat": 115,
+      "Squat": 125,
       "Bench Press": 112.5,
-      "Deadlift": 170,
-      "OHP": 62.5,
+      "Deadlift": 175,
+      "OHP": 65,
       "Close Grip Bench": 100,
       "Incline Press": 85,
       "Paused Squat": 105

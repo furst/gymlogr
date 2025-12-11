@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { Program, WorkoutSession, UserSettings } from "./types";
+import { calculateTMAdjustment, roundWeight } from "./sbs-calculations";
 
 // Database schema with Dexie
 // This abstraction layer makes it easy to migrate to PostgreSQL later
@@ -223,6 +224,116 @@ export async function saveUserSettings(
     ...settings,
     id: USER_SETTINGS_ID,
   });
+}
+
+// ============ Weekly Sets Aggregation for SBS ============
+
+// Build a mapping of exerciseId to lift_key from a program
+export function buildExerciseToLiftKeyMap(
+  program: Program
+): Record<string, string> {
+  const map: Record<string, string> = {};
+
+  for (const week of program.weeks) {
+    for (const day of week.days) {
+      for (const exercise of day.exercises) {
+        if (exercise.type === "sbs" && exercise.sbs_config && exercise.id) {
+          map[exercise.id] = exercise.sbs_config.lift_key;
+        }
+      }
+    }
+  }
+
+  return map;
+}
+
+// Get total sets completed for each lift_key in a given week
+export async function getWeeklySetsPerLift(
+  programId: string,
+  weekNumber: number,
+  program: Program
+): Promise<Record<string, number>> {
+  const sessions = await db.workoutSessions
+    .where("programId")
+    .equals(programId)
+    .filter((session) => session.weekNumber === weekNumber)
+    .toArray();
+
+  const exerciseToLiftKey = buildExerciseToLiftKeyMap(program);
+  const setsPerLift: Record<string, number> = {};
+
+  for (const session of sessions) {
+    for (const exercise of session.exercises) {
+      if (exercise.type === "sbs" && exercise.setsCompleted !== undefined) {
+        // Look up lift_key from exerciseId
+        const liftKey = exerciseToLiftKey[exercise.exerciseId];
+        if (liftKey) {
+          setsPerLift[liftKey] = (setsPerLift[liftKey] || 0) + exercise.setsCompleted;
+        }
+      }
+    }
+  }
+
+  return setsPerLift;
+}
+
+// ============ TM Adjustment Logic ============
+
+export interface TMAdjustmentResult {
+  liftKey: string;
+  oldMax: number;
+  newMax: number;
+  setsCompleted: number;
+  action: "increase" | "decrease" | "maintain";
+  adjustmentPercent: number;
+}
+
+// Calculate and apply TM adjustments based on completed sets for a week
+// Returns the adjustments that were made
+export async function applyWeeklyTMAdjustments(
+  programId: string,
+  weekNumber: number,
+  weightIncrement: number = 2.5
+): Promise<TMAdjustmentResult[]> {
+  const program = await getProgram(programId);
+  if (!program) return [];
+
+  const weeklySets = await getWeeklySetsPerLift(programId, weekNumber, program);
+  const adjustments: TMAdjustmentResult[] = [];
+  let programModified = false;
+
+  for (const [liftKey, setsCompleted] of Object.entries(weeklySets)) {
+    const currentMax = program.settings.maxes[liftKey];
+    if (!currentMax) continue;
+
+    const { action, adjustmentPercent } = calculateTMAdjustment(liftKey, setsCompleted);
+
+    if (action !== "maintain") {
+      const rawNewMax = currentMax * (1 + adjustmentPercent);
+      const newMax = roundWeight(rawNewMax, weightIncrement);
+
+      // Only record adjustment if the rounded max actually changed
+      if (newMax !== currentMax) {
+        program.settings.maxes[liftKey] = newMax;
+        programModified = true;
+
+        adjustments.push({
+          liftKey,
+          oldMax: currentMax,
+          newMax,
+          setsCompleted,
+          action,
+          adjustmentPercent,
+        });
+      }
+    }
+  }
+
+  if (programModified) {
+    await saveProgram(program);
+  }
+
+  return adjustments;
 }
 
 // ============ Database Utilities ============

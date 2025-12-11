@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, X, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import {
   saveWorkoutSession,
   getWorkoutSessionForDay,
   getPreviousDayComment,
+  applyWeeklyTMAdjustments,
+  type TMAdjustmentResult,
 } from "@/lib/db";
 import {
   getSBSPrescription,
@@ -44,6 +46,8 @@ export default function WorkoutPage() {
   const [previousComment, setPreviousComment] = useState<string | null>(null);
   const commentSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingCommentSaveRef = useRef<(() => Promise<void>) | null>(null);
+  const [tmAdjustments, setTmAdjustments] = useState<TMAdjustmentResult[]>([]);
+  const adjustmentDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadWorkoutSession = useCallback(
     async (
@@ -190,7 +194,7 @@ export default function WorkoutPage() {
   };
 
   const handleWeekChange = async (delta: number) => {
-    if (!program) return;
+    if (!program || !workoutSession) return;
 
     const newWeek = Math.max(
       1,
@@ -200,6 +204,35 @@ export default function WorkoutPage() {
 
     // Flush any pending comment save before navigating
     await flushPendingCommentSave();
+
+    const settings = await getUserSettings();
+
+    // When moving forward to a new week, apply TM adjustments for the week we're leaving
+    if (delta > 0) {
+      const adjustments = await applyWeeklyTMAdjustments(
+        workoutSession.programId,
+        currentWeek,
+        settings.weightIncrement
+      );
+
+      if (adjustments.length > 0) {
+        setTmAdjustments(adjustments);
+        // Clear previous timeout if any
+        if (adjustmentDismissTimeoutRef.current) {
+          clearTimeout(adjustmentDismissTimeoutRef.current);
+        }
+        // Auto-dismiss after 8 seconds
+        adjustmentDismissTimeoutRef.current = setTimeout(() => {
+          setTmAdjustments([]);
+        }, 8000);
+
+        // Reload the program to get updated maxes
+        const updatedProgram = await getProgram(workoutSession.programId);
+        if (updatedProgram) {
+          setProgram(updatedProgram);
+        }
+      }
+    }
 
     setCurrentWeek(newWeek);
 
@@ -211,7 +244,8 @@ export default function WorkoutPage() {
 
       await saveUserSettings({ currentWeek: newWeek, currentDay: dayName });
 
-      const settings = await getUserSettings();
+      // Get fresh program (might have been updated by TM adjustments)
+      const currentProgram = await getProgram(workoutSession.programId);
       const presc: Record<string, SBSPrescription> = {};
       for (const day of weekData.days) {
         for (const exercise of day.exercises) {
@@ -219,7 +253,7 @@ export default function WorkoutPage() {
             presc[exercise.id] = getSBSPrescription(
               exercise.sbs_config.lift_key,
               newWeek - 1,
-              program.settings,
+              currentProgram?.settings || program.settings,
               settings.weightIncrement
             );
           }
@@ -228,7 +262,7 @@ export default function WorkoutPage() {
       setPrescriptions(presc);
 
       await loadWorkoutSession(
-        program,
+        currentProgram || program,
         settings.activeProgramId!,
         newWeek,
         dayName
@@ -371,6 +405,51 @@ export default function WorkoutPage() {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* TM Adjustment Notification */}
+      {tmAdjustments.length > 0 && (
+        <div className="relative rounded-lg border border-border bg-card p-4 animate-slide-up">
+          <button
+            onClick={() => setTmAdjustments([])}
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            Training Max Adjusted
+          </h3>
+          <div className="space-y-2">
+            {tmAdjustments.map((adj) => (
+              <div
+                key={adj.liftKey}
+                className={cn(
+                  "flex items-center justify-between text-sm p-2 rounded-md",
+                  adj.action === "increase"
+                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                    : "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {adj.action === "increase" ? (
+                    <TrendingUp className="h-4 w-4" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4" />
+                  )}
+                  <span className="font-medium">{adj.liftKey}</span>
+                </div>
+                <div className="flex items-center gap-2 tabular-nums">
+                  <span>{adj.oldMax}kg</span>
+                  <span>→</span>
+                  <span className="font-semibold">{adj.newMax}kg</span>
+                  <span className="text-xs opacity-75">
+                    ({adj.setsCompleted} sets, {adj.action === "increase" ? "+" : ""}{(adj.adjustmentPercent * 100).toFixed(0)}%)
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Program Notes */}
       {program.notes && (

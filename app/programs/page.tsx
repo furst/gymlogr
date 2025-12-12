@@ -180,7 +180,8 @@ export default function ProgramsPage() {
                     rir: "1-2",
                   },
                   restTime: "3-5 min",
-                  description: "Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.",
+                  description:
+                    "Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.",
                   link: "https://youtube.com/watch?v=J2D2J7RO_tA&feature=youtu.be",
                 };
               }
@@ -203,6 +204,145 @@ export default function ProgramsPage() {
       alert("Squat replaced with Smith Machine Squat!");
     } catch (err) {
       setError("Failed to replace exercise");
+      console.error(err);
+    }
+  };
+
+  const handleRemovePausedSquat = async () => {
+    if (!activeProgramId) {
+      setError("No active program selected");
+      return;
+    }
+
+    try {
+      const program = await getProgram(activeProgramId);
+      if (!program) {
+        setError("Active program not found");
+        return;
+      }
+
+      // Standing Calf Raise definition (copied from other days)
+      const standingCalfRaise = {
+        id: generateExerciseId(),
+        name: "Standing Calf Raise",
+        type: "regular" as const,
+        link: "https://www.youtube.com/watch?si=Q_4oyceNkI-WarRg&v=6lR2JdxUh7w&feature=youtu.be",
+        lastSetIntensity: "Static Stretch (30s)",
+        description:
+          "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+        restTime: "1-2 min",
+        targets: {
+          sets: "3",
+          reps: "12-15",
+          rir: "0-2",
+        },
+      };
+
+      // Seated Leg Curl definition
+      const seatedLegCurl = {
+        id: generateExerciseId(),
+        name: "Seated Leg Curl (BONUS)",
+        type: "regular" as const,
+        link: "https://www.youtube.com/watch?si=Z1Cx7ih-vWTSTqq-&v=yv0aAY7M1mk&feature=youtu.be",
+        lastSetIntensity: "Failure + LLPs (Extend set) every other week",
+        description:
+          "Lean forward over the machine to get a maximum stretch in your hamstrings.",
+        restTime: "1-2 min",
+        targets: {
+          sets: "2",
+          reps: "10-12",
+          rir: "0-2",
+        },
+      };
+
+      // Get the current highest intensity_week_index to continue from
+      const currentWeekCount = program.weeks.length;
+
+      // Update existing weeks: remove Paused Squat from Day 5 and add new exercises
+      const updatedWeeks = program.weeks.map((week) => ({
+        ...week,
+        days: week.days.map((day) => {
+          if (day.name === "Day 5") {
+            // Filter out Paused Squat and add Standing Calf Raise + Seated Leg Curl at the end
+            const filteredExercises = day.exercises.filter(
+              (exercise) => exercise.name !== "Paused Squat"
+            );
+            return {
+              ...day,
+              exercises: [
+                ...filteredExercises,
+                { ...standingCalfRaise, id: generateExerciseId() },
+                { ...seatedLegCurl, id: generateExerciseId() },
+              ],
+            };
+          }
+          return day;
+        }),
+      }));
+
+      // Create 2 additional weeks by cloning the last week with incremented intensity indices
+      // Week 12 has index 11, so week 13 should have index 12, week 14 should have index 13
+      const lastWeek = program.weeks[program.weeks.length - 1];
+      const newWeeks = [1, 2].map((offset) => ({
+        ...lastWeek,
+        week_number: currentWeekCount + offset,
+        days: lastWeek.days.map((day) => {
+          // First update Day 5 to remove Paused Squat and add new exercises
+          let exercises = day.exercises;
+          if (day.name === "Day 5") {
+            exercises = day.exercises.filter(
+              (exercise) => exercise.name !== "Paused Squat"
+            );
+            exercises = [
+              ...exercises,
+              { ...standingCalfRaise, id: generateExerciseId() },
+              { ...seatedLegCurl, id: generateExerciseId() },
+            ];
+          }
+
+          // Then bump intensity_week_index for SBS exercises (increment by offset from last week)
+          return {
+            ...day,
+            exercises: exercises.map((exercise) => {
+              if (exercise.type === "sbs" && exercise.sbs_config) {
+                return {
+                  ...exercise,
+                  id: generateExerciseId(),
+                  sbs_config: {
+                    ...exercise.sbs_config,
+                    intensity_week_index:
+                      exercise.sbs_config.intensity_week_index + offset,
+                  },
+                };
+              }
+              return {
+                ...exercise,
+                id: generateExerciseId(),
+              };
+            }),
+          };
+        }),
+      }));
+
+      // Remove Paused Squat from maxes
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { "Paused Squat": _pausedSquatMax, ...remainingMaxes } =
+        program.settings.maxes;
+
+      const updatedProgram: Program = {
+        ...program,
+        settings: {
+          ...program.settings,
+          maxes: remainingMaxes,
+        },
+        weeks: [...updatedWeeks, ...newWeeks],
+      };
+
+      await saveProgram(updatedProgram);
+      await loadData();
+      alert("Paused Squat removed, exercises added, and 2 weeks extended!");
+    } catch (err) {
+      setError("Failed to modify program");
       console.error(err);
     }
   };
@@ -317,6 +457,14 @@ export default function ProgramsPage() {
             disabled={!activeProgramId}
           >
             Replace Squat
+          </Button>
+          <Button
+            onClick={handleRemovePausedSquat}
+            variant="outline"
+            className="press-effect"
+            disabled={!activeProgramId}
+          >
+            Remove Paused Squat
           </Button>
           <Button
             onClick={handleImportProgramReal2}

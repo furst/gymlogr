@@ -1,0 +1,114 @@
+{
+  "reps_at_percent": {
+    "default": {
+      "50.0": 8,
+      "52.5": 8,
+      "55.0": 8,
+      "57.5": 8,
+      "60.0": 7,
+      "62.5": 7,
+      "65.0": 6,
+      "67.5": 6,
+      "70.0": 5,
+      "72.5": 5,
+      "75.0": 4,
+      "77.5": 4,
+      "80.0": 3,
+      "82.5": 3,
+      "85.0": 2,
+      "87.5": 2,
+      "90.0": 1,
+      "92.5": 1,
+      "95.0": 1,
+      "97.5": 1,
+      "100.0": 1
+    },
+    "Squat": "default",
+    "Bench Press": "default",
+    "Deadlift": "default",
+    "OHP": "default",
+    "Close Grip Bench": "default",
+    "Incline Press": "default",
+    "Paused Squat": "default"
+  },
+  "rir_cutoffs": {
+    "default": {
+      "50.0": 5,
+      "52.5": 5,
+      "55.0": 5,
+      "57.5": 5,
+      "60.0": 4,
+      "62.5": 4,
+      "65.0": 4,
+      "67.5": 4,
+      "70.0": 3,
+      "72.5": 3,
+      "75.0": 3,
+      "77.5": 3,
+      "80.0": 2,
+      "82.5": 2,
+      "85.0": 2,
+      "87.5": 2,
+      "90.0": 1,
+      "92.5": 1,
+      "95.0": 1,
+      "97.5": 0,
+      "100.0": 0
+    },
+    "Squat": "default",
+    "Bench Press": "default",
+    "Deadlift": "default",
+    "OHP": "default",
+    "Close Grip Bench": "default",
+    "Incline Press": "default",
+    "Paused Squat": "default"
+  },
+  "intensity_schedule": {
+    "default": [
+      0.75, 0.8, 0.85, 0.775, 0.825, 0.875, 0.6, 0.8, 0.85, 0.9, 0.85, 0.9,
+      0.95, 0.6
+    ],
+    "Squat": [
+      0.7, 0.75, 0.8, 0.725, 0.775, 0.825, 0.6, 0.75, 0.8, 0.85, 0.775, 0.825,
+      0.875, 0.6
+    ],
+    "Bench Press": "default",
+    "Deadlift": "default",
+    "OHP": "default",
+    "Close Grip Bench": [
+      0.65, 0.7, 0.75, 0.675, 0.725, 0.775, 0.5, 0.7, 0.75, 0.8, 0.75, 0.8,
+      0.85, 0.5
+    ],
+    "Incline Press": [
+      0.65, 0.7, 0.75, 0.675, 0.725, 0.775, 0.5, 0.7, 0.75, 0.8, 0.75, 0.8,
+      0.85, 0.5
+    ],
+    "Paused Squat": [
+      0.65, 0.7, 0.75, 0.675, 0.725, 0.775, 0.5, 0.7, 0.75, 0.8, 0.75, 0.8,
+      0.85, 0.5
+    ]
+  },
+  "sets_per_week_logic": {
+    "default": {
+      "default_range": {
+        "min": 4,
+        "max": 6
+      },
+      "adjustment": {
+        "above_range": {
+          "action": "increase_tm",
+          "value": 0.02
+        },
+        "below_range": {
+          "action": "decrease_tm",
+          "value": -0.05
+        }
+      }
+    },
+    "Squat": "default",
+    "Bench Press": "default",
+    "Close Grip Bench": "default",
+    "Incline Press": "default",
+    "Paused Squat": "default"
+  }
+}

@@ -242,7 +242,10 @@ const program = {
   description: "8-week cut. Lower body never to failure. Ramp-up sets only for the first compound of the day.",
   notes: "Rest 2-3 min on the first lift or pairing, 60-90s elsewhere. Ramp-up sets only for the first compound. Lower-body compounds never to failure on this cut.",
   settings: {
-    maxes: {},
+    maxes: {
+      "Bench Press": 100,
+      "Romanian Deadlift": 100
+    },
     auxiliary_mapping: {}
   },
   weeks: []

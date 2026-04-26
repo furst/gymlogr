@@ -33,6 +33,7 @@ import {
   getUserSettings,
   saveUserSettings,
   getWorkoutSessionsForProgram,
+  saveWorkoutSession,
 } from "@/lib/db";
 import type { Program } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,66 @@ import { validateProgram, validateLiftKeys } from "@/lib/validation";
 
 function generateExerciseId(): string {
   return `ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+}
+
+const DAY_PREFIX_REGEX =
+  /^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?\s*[-–—]\s*)/i;
+
+function splitDayName(name: string): { prefix: string; rest: string } {
+  const match = name.match(DAY_PREFIX_REGEX);
+  if (match) {
+    return { prefix: match[1], rest: name.slice(match[1].length) };
+  }
+  return { prefix: "", rest: name };
+}
+
+function swapDaysAcrossWeeks(
+  program: Program,
+  i: number,
+  j: number
+): {
+  swapped: Program;
+  // weekNumber -> oldDayName -> newDayName (for renaming existing sessions)
+  sessionRenames: Record<number, Record<string, string>>;
+} {
+  const sessionRenames: Record<number, Record<string, string>> = {};
+
+  const swapped: Program = {
+    ...program,
+    weeks: program.weeks.map((week) => {
+      if (
+        i < 0 ||
+        j < 0 ||
+        i >= week.days.length ||
+        j >= week.days.length
+      ) {
+        return week;
+      }
+      const days = [...week.days];
+      const dayI = days[i];
+      const dayJ = days[j];
+      const oldNameI = dayI.name;
+      const oldNameJ = dayJ.name;
+      const { prefix: prefixI, rest: restI } = splitDayName(oldNameI);
+      const { prefix: prefixJ, rest: restJ } = splitDayName(oldNameJ);
+      const newNameI = prefixI + restJ; // pos i: keeps prefix, takes rest from pos j
+      const newNameJ = prefixJ + restI; // pos j: keeps prefix, takes rest from pos i
+      days[i] = { ...dayJ, name: newNameI };
+      days[j] = { ...dayI, name: newNameJ };
+
+      // Sessions follow their content, not the slot:
+      // content originally at pos i moved to pos j → rename oldNameI → newNameJ
+      // content originally at pos j moved to pos i → rename oldNameJ → newNameI
+      sessionRenames[week.week_number] = {
+        [oldNameI]: newNameJ,
+        [oldNameJ]: newNameI,
+      };
+
+      return { ...week, days };
+    }),
+  };
+
+  return { swapped, sessionRenames };
 }
 
 function processProgram(program: Program): Program {
@@ -69,6 +130,8 @@ export default function ProgramsPage() {
   const [recentlyActivated, setRecentlyActivated] = useState<string | null>(
     null
   );
+  const [swapRunning, setSwapRunning] = useState(false);
+  const [swapMessage, setSwapMessage] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -268,6 +331,51 @@ export default function ProgramsPage() {
     }
   };
 
+  // ONE-TIME: swap days 3 ↔ 4 on the cut program (Mon/Wed/Fri/Sun rotation).
+  // Delete this handler and its button after running once.
+  const handleRunOneTimeCutSwap = async () => {
+    setSwapRunning(true);
+    setSwapMessage(null);
+    try {
+      const target = programs.find(
+        (p) =>
+          p.weeks[0]?.days.length === 4 &&
+          p.weeks[0]!.days[2]?.name === "Fri - Upper 2" &&
+          p.weeks[0]!.days[3]?.name === "Sun - Low-Fatigue Support"
+      );
+      if (!target) {
+        setSwapMessage("No matching program found.");
+        return;
+      }
+
+      const { swapped, sessionRenames } = swapDaysAcrossWeeks(target, 2, 3);
+      await saveProgram(swapped);
+
+      if (target.id) {
+        const sessions = await getWorkoutSessionsForProgram(target.id);
+        await Promise.all(
+          sessions.map(async (session) => {
+            const newName =
+              sessionRenames[session.weekNumber]?.[session.dayName];
+            if (newName && newName !== session.dayName) {
+              await saveWorkoutSession({ ...session, dayName: newName });
+            }
+          })
+        );
+      }
+
+      await loadData();
+      setSwapMessage(`Swapped days 3 ↔ 4 on "${target.name}".`);
+    } catch (err) {
+      setSwapMessage(
+        err instanceof Error ? err.message : "Swap failed"
+      );
+      console.error(err);
+    } finally {
+      setSwapRunning(false);
+    }
+  };
+
   const handleExportProgram = async (program: Program) => {
     // Fetch workout sessions for this program
     const sessions = program.id
@@ -383,6 +491,29 @@ export default function ProgramsPage() {
           {error}
         </div>
       )}
+
+      {/* TEMP: one-time fix to swap days 3 ↔ 4 on the cut program. Remove after running. */}
+      <div className="flex items-center justify-between gap-3 p-3 border border-dashed rounded-md text-sm">
+        <div className="flex flex-col">
+          <span className="font-medium">One-time: swap cut program days</span>
+          <span className="text-muted-foreground text-xs">
+            Mon Lower → Wed Upper → Fri Lower → Sun Upper. Renames matching
+            sessions too.
+          </span>
+          {swapMessage && (
+            <span className="text-xs text-primary mt-1">{swapMessage}</span>
+          )}
+        </div>
+        <Button
+          onClick={handleRunOneTimeCutSwap}
+          disabled={swapRunning}
+          variant="outline"
+          size="sm"
+          className="press-effect flex-shrink-0"
+        >
+          {swapRunning ? "Running…" : "Run swap"}
+        </Button>
+      </div>
 
       {programs.length === 0 ? (
         <Card className="animate-scale-in">
@@ -585,6 +716,7 @@ export default function ProgramsPage() {
                     </div>
                   )}
                 </div>
+
               </CardContent>
             </Card>
           ))}

@@ -54,6 +54,7 @@ import {
   deleteTemplate,
   addTemplateToSlots,
   type ExerciseTemplate,
+  type InsertPosition,
 } from "@/lib/exercise-templates";
 
 // Generate unique ID for exercises
@@ -907,6 +908,7 @@ function ManageTemplatesCard({
   const [adding, setAdding] = useState<{
     draft: ExerciseDefinition;
     slots: Set<string>;
+    position: InsertPosition;
   } | null>(null);
 
   const dayLabel = (occ: { weekIndex: number; dayIndex: number }) => {
@@ -947,6 +949,7 @@ function ManageTemplatesCard({
         targets: { sets: "3", reps: "10", rir: "2" },
       },
       slots: new Set(),
+      position: { kind: "end" },
     });
   };
 
@@ -988,8 +991,27 @@ function ManageTemplatesCard({
       const [weekIndex, dayIndex] = s.split(":").map(Number);
       return { weekIndex, dayIndex };
     });
-    onChange(addTemplateToSlots(program, adding.draft, slots));
+    onChange(addTemplateToSlots(program, adding.draft, slots, adding.position));
     setAdding(null);
+  };
+
+  const positionValue =
+    adding === null
+      ? "end"
+      : adding.position.kind === "after"
+        ? `after:${adding.position.afterKey}`
+        : adding.position.kind;
+
+  const handlePositionChange = (value: string) => {
+    if (!adding) return;
+    if (value === "end" || value === "start") {
+      setAdding({ ...adding, position: { kind: value } });
+    } else if (value.startsWith("after:")) {
+      setAdding({
+        ...adding,
+        position: { kind: "after", afterKey: value.slice("after:".length) },
+      });
+    }
   };
 
   // Collect unique day names across all weeks for the "select-by-day-name" shortcut
@@ -1137,6 +1159,40 @@ function ManageTemplatesCard({
               />
 
               <Separator />
+
+              <div className="space-y-2">
+                <Label>Position in day</Label>
+                <Select
+                  value={positionValue}
+                  onValueChange={handlePositionChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="end">At end (default)</SelectItem>
+                    <SelectItem value="start">At start</SelectItem>
+                    {templates.length > 0 && (
+                      <>
+                        {templates.map((t) => (
+                          <SelectItem
+                            key={t.key}
+                            value={`after:${t.key}`}
+                          >
+                            After: {t.representative.name || "(unnamed)"}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                {adding.position.kind === "after" && (
+                  <p className="text-xs text-muted-foreground">
+                    Days that don&apos;t contain this exercise will fall back to
+                    appending at the end.
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-3">
                 <Label>Insert into</Label>

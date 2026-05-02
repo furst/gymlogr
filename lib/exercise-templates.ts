@@ -144,12 +144,22 @@ export function deleteTemplate(program: Program, key: string): Program {
   };
 }
 
+export type InsertPosition =
+  | { kind: "end" }
+  | { kind: "start" }
+  | { kind: "after"; afterKey: string };
+
 // Inserts a new exercise into the selected (week, day) slots, all sharing one
 // fresh templateId. Each insertion gets a unique instance id.
+//
+// `position` controls placement within each day. For "after", the new exercise
+// is inserted after the last occurrence of `afterKey` in that day, falling back
+// to the end if the day doesn't contain that template.
 export function addTemplateToSlots(
   program: Program,
   exercise: Omit<ExerciseDefinition, "id" | "templateId">,
-  slots: Array<{ weekIndex: number; dayIndex: number }>
+  slots: Array<{ weekIndex: number; dayIndex: number }>,
+  position: InsertPosition = { kind: "end" }
 ): Program {
   const newTemplateId = generateTemplateId();
   const slotSet = new Set(slots.map((s) => `${s.weekIndex}:${s.dayIndex}`));
@@ -165,7 +175,23 @@ export function addTemplateToSlots(
           id: generateExerciseId(),
           templateId: newTemplateId,
         };
-        return { ...day, exercises: [...day.exercises, newExercise] };
+
+        let insertIndex = day.exercises.length;
+        if (position.kind === "start") {
+          insertIndex = 0;
+        } else if (position.kind === "after") {
+          let lastMatch = -1;
+          for (let i = 0; i < day.exercises.length; i++) {
+            if (templateKey(day.exercises[i]) === position.afterKey) {
+              lastMatch = i;
+            }
+          }
+          insertIndex = lastMatch === -1 ? day.exercises.length : lastMatch + 1;
+        }
+
+        const nextExercises = [...day.exercises];
+        nextExercises.splice(insertIndex, 0, newExercise);
+        return { ...day, exercises: nextExercises };
       }),
     })),
   };

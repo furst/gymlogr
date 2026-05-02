@@ -30,6 +30,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { getProgram, saveProgram } from "@/lib/db";
@@ -40,10 +48,21 @@ import type {
   ExerciseDefinition,
   AlternativeExercise,
 } from "@/lib/types";
+import {
+  groupExerciseTemplates,
+  updateTemplate,
+  deleteTemplate,
+  addTemplateToSlots,
+  type ExerciseTemplate,
+} from "@/lib/exercise-templates";
 
 // Generate unique ID for exercises
 function generateExerciseId(): string {
   return `ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+}
+
+function generateTemplateId(): string {
+  return `tpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
 // ============ Alternative Exercise Editor ============
@@ -422,6 +441,7 @@ function DayEditor({
   const addExercise = (type: "sbs" | "regular") => {
     const newExercise: ExerciseDefinition = {
       id: generateExerciseId(),
+      templateId: generateTemplateId(),
       name: "",
       type,
       ...(type === "sbs"
@@ -447,6 +467,7 @@ function DayEditor({
     const duplicated: ExerciseDefinition = {
       ...exerciseToDuplicate,
       id: generateExerciseId(),
+      templateId: generateTemplateId(),
       name: `${exerciseToDuplicate.name} (copy)`,
     };
     const newExercises = [...day.exercises];
@@ -634,6 +655,556 @@ function WeekEditor({
         </CollapsibleContent>
       </Collapsible>
     </Card>
+  );
+}
+
+// ============ Template Form (used in Add/Edit dialogs) ============
+function TemplateForm({
+  draft,
+  onChange,
+  sbsLiftKeys,
+}: {
+  draft: ExerciseDefinition;
+  onChange: (exercise: ExerciseDefinition) => void;
+  sbsLiftKeys: string[];
+}) {
+  const updateField = <K extends keyof ExerciseDefinition>(
+    field: K,
+    value: ExerciseDefinition[K]
+  ) => {
+    onChange({ ...draft, [field]: value });
+  };
+
+  const addAlternative = () => {
+    updateField("alternatives", [...(draft.alternatives || []), { name: "" }]);
+  };
+
+  const updateAlternative = (index: number, alt: AlternativeExercise) => {
+    const next = [...(draft.alternatives || [])];
+    next[index] = alt;
+    updateField("alternatives", next);
+  };
+
+  const removeAlternative = (index: number) => {
+    const next = (draft.alternatives || []).filter((_, i) => i !== index);
+    updateField("alternatives", next.length > 0 ? next : undefined);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Exercise Name</Label>
+          <Input
+            value={draft.name}
+            onChange={(e) => updateField("name", e.target.value)}
+            placeholder="e.g., Squat, Bench Press"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Type</Label>
+          <Select
+            value={draft.type}
+            onValueChange={(value: "sbs" | "regular") => {
+              const updated: ExerciseDefinition = { ...draft, type: value };
+              if (value === "sbs") {
+                updated.sbs_config = draft.sbs_config || {
+                  lift_key: draft.name,
+                  intensity_week_index: 0,
+                };
+                delete updated.targets;
+              } else {
+                updated.targets = draft.targets || {
+                  sets: "3",
+                  reps: "10",
+                  rir: "2",
+                };
+                delete updated.sbs_config;
+              }
+              onChange(updated);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sbs">SBS (Auto-regulated)</SelectItem>
+              <SelectItem value="regular">Regular (Sets/Reps)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {draft.type === "sbs" && draft.sbs_config && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/50 rounded-md">
+          <div className="space-y-2">
+            <Label>Lift Key</Label>
+            <Select
+              value={draft.sbs_config.lift_key}
+              onValueChange={(value) =>
+                updateField("sbs_config", {
+                  ...draft.sbs_config!,
+                  lift_key: value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select lift key" />
+              </SelectTrigger>
+              <SelectContent>
+                {sbsLiftKeys.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {key}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Intensity Week Index</Label>
+            <Input
+              type="number"
+              min="0"
+              value={draft.sbs_config.intensity_week_index}
+              onChange={(e) =>
+                updateField("sbs_config", {
+                  ...draft.sbs_config!,
+                  intensity_week_index: parseInt(e.target.value) || 0,
+                })
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {draft.type === "regular" && (
+        <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-md">
+          <div className="space-y-2">
+            <Label>Sets</Label>
+            <Input
+              value={draft.targets?.sets || ""}
+              onChange={(e) =>
+                updateField("targets", {
+                  ...draft.targets,
+                  sets: e.target.value,
+                })
+              }
+              placeholder="e.g., 3"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Reps</Label>
+            <Input
+              value={draft.targets?.reps || ""}
+              onChange={(e) =>
+                updateField("targets", {
+                  ...draft.targets,
+                  reps: e.target.value,
+                })
+              }
+              placeholder="e.g., 8-12"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>RIR</Label>
+            <Input
+              value={draft.targets?.rir || ""}
+              onChange={(e) =>
+                updateField("targets", {
+                  ...draft.targets,
+                  rir: e.target.value,
+                })
+              }
+              placeholder="e.g., 2"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label>Last Set Intensity Technique (optional)</Label>
+        <Input
+          value={draft.lastSetIntensity || ""}
+          onChange={(e) =>
+            updateField("lastSetIntensity", e.target.value || undefined)
+          }
+          placeholder="e.g., Drop set, Myo-reps, AMRAP"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Description / Form Cues (optional)</Label>
+        <Textarea
+          value={draft.description || ""}
+          onChange={(e) =>
+            updateField("description", e.target.value || undefined)
+          }
+          placeholder="Notes about form, tempo, or execution"
+          rows={2}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Video/Tutorial Link (optional)</Label>
+        <Input
+          value={draft.link || ""}
+          onChange={(e) => updateField("link", e.target.value || undefined)}
+          placeholder="https://..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Rest Time (optional)</Label>
+        <Input
+          value={draft.restTime || ""}
+          onChange={(e) =>
+            updateField("restTime", e.target.value || undefined)
+          }
+          placeholder="e.g., 2 min, 90 sec"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Alternative Exercises</Label>
+          <Button size="sm" variant="outline" onClick={addAlternative}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Alternative
+          </Button>
+        </div>
+        {draft.alternatives && draft.alternatives.length > 0 && (
+          <div className="space-y-2 pl-4 border-l-2">
+            {draft.alternatives.map((alt, index) => (
+              <AlternativeExerciseEditor
+                key={index}
+                alternative={alt}
+                onUpdate={(updated) => updateAlternative(index, updated)}
+                onRemove={() => removeAlternative(index)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============ Manage Templates Card ============
+function ManageTemplatesCard({
+  program,
+  onChange,
+  sbsLiftKeys,
+}: {
+  program: Program;
+  onChange: (program: Program) => void;
+  sbsLiftKeys: string[];
+}) {
+  const templates = groupExerciseTemplates(program);
+  const [editing, setEditing] = useState<{
+    key: string;
+    draft: ExerciseDefinition;
+  } | null>(null);
+  const [adding, setAdding] = useState<{
+    draft: ExerciseDefinition;
+    slots: Set<string>;
+  } | null>(null);
+
+  const dayLabel = (occ: { weekIndex: number; dayIndex: number }) => {
+    const week = program.weeks[occ.weekIndex];
+    const day = week?.days[occ.dayIndex];
+    return `W${week?.week_number ?? occ.weekIndex + 1} · ${day?.name ?? `Day ${occ.dayIndex + 1}`}`;
+  };
+
+  const handleEdit = (template: ExerciseTemplate) => {
+    setEditing({
+      key: template.key,
+      draft: JSON.parse(JSON.stringify(template.representative)),
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editing) return;
+    onChange(updateTemplate(program, editing.key, editing.draft));
+    setEditing(null);
+  };
+
+  const handleDelete = (template: ExerciseTemplate) => {
+    const label = template.representative.name || "this exercise";
+    if (
+      !confirm(
+        `Delete "${label}" from all ${template.occurrences.length} day(s)?`
+      )
+    )
+      return;
+    onChange(deleteTemplate(program, template.key));
+  };
+
+  const handleStartAdd = () => {
+    setAdding({
+      draft: {
+        name: "",
+        type: "regular",
+        targets: { sets: "3", reps: "10", rir: "2" },
+      },
+      slots: new Set(),
+    });
+  };
+
+  const toggleSlot = (weekIndex: number, dayIndex: number) => {
+    if (!adding) return;
+    const slotKey = `${weekIndex}:${dayIndex}`;
+    const next = new Set(adding.slots);
+    if (next.has(slotKey)) next.delete(slotKey);
+    else next.add(slotKey);
+    setAdding({ ...adding, slots: next });
+  };
+
+  const toggleDayNameAcrossWeeks = (dayName: string) => {
+    if (!adding) return;
+    const matching: string[] = [];
+    program.weeks.forEach((week, weekIndex) => {
+      week.days.forEach((day, dayIndex) => {
+        if (day.name === dayName) matching.push(`${weekIndex}:${dayIndex}`);
+      });
+    });
+    const allSelected = matching.every((s) => adding.slots.has(s));
+    const next = new Set(adding.slots);
+    if (allSelected) matching.forEach((s) => next.delete(s));
+    else matching.forEach((s) => next.add(s));
+    setAdding({ ...adding, slots: next });
+  };
+
+  const handleSaveAdd = () => {
+    if (!adding) return;
+    if (!adding.draft.name.trim()) {
+      alert("Exercise name is required");
+      return;
+    }
+    if (adding.slots.size === 0) {
+      alert("Pick at least one day to add this exercise to");
+      return;
+    }
+    const slots = Array.from(adding.slots).map((s) => {
+      const [weekIndex, dayIndex] = s.split(":").map(Number);
+      return { weekIndex, dayIndex };
+    });
+    onChange(addTemplateToSlots(program, adding.draft, slots));
+    setAdding(null);
+  };
+
+  // Collect unique day names across all weeks for the "select-by-day-name" shortcut
+  const uniqueDayNames = Array.from(
+    new Set(program.weeks.flatMap((w) => w.days.map((d) => d.name)))
+  );
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <CardTitle>Manage Exercises</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Edits and deletes here apply to every day this exercise appears
+                in.
+              </p>
+            </div>
+            <Button onClick={handleStartAdd} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Across Days
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {templates.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No exercises yet. Add one to all days at once with the button
+              above, or add individual exercises inside a day.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {templates.map((template) => (
+                <div
+                  key={template.key}
+                  className="flex items-center gap-3 p-3 rounded-md border bg-muted/20"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium truncate">
+                        {template.representative.name || "(unnamed)"}
+                      </span>
+                      <Badge
+                        variant={
+                          template.representative.type === "sbs"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {template.representative.type === "sbs"
+                          ? "SBS"
+                          : "Regular"}
+                      </Badge>
+                      {!template.templateId && (
+                        <Badge
+                          variant="outline"
+                          title="Matched by name (legacy). Save to assign a stable template id."
+                        >
+                          name-matched
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Appears in {template.occurrences.length} day
+                      {template.occurrences.length === 1 ? "" : "s"}:{" "}
+                      {template.occurrences
+                        .slice(0, 4)
+                        .map(dayLabel)
+                        .join(", ")}
+                      {template.occurrences.length > 4
+                        ? `, +${template.occurrences.length - 4} more`
+                        : ""}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(template)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => handleDelete(template)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Template Dialog */}
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Exercise</DialogTitle>
+            <DialogDescription>
+              Changes apply to every day this exercise appears in.
+            </DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <TemplateForm
+              draft={editing.draft}
+              onChange={(draft) => setEditing({ ...editing, draft })}
+              sbsLiftKeys={sbsLiftKeys}
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>Apply to All</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Template Dialog */}
+      <Dialog
+        open={adding !== null}
+        onOpenChange={(open) => !open && setAdding(null)}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Exercise Across Days</DialogTitle>
+            <DialogDescription>
+              Pick the days to insert into. All inserted instances share one
+              template, so future edits propagate.
+            </DialogDescription>
+          </DialogHeader>
+          {adding && (
+            <div className="space-y-4">
+              <TemplateForm
+                draft={adding.draft}
+                onChange={(draft) => setAdding({ ...adding, draft })}
+                sbsLiftKeys={sbsLiftKeys}
+              />
+
+              <Separator />
+
+              <div className="space-y-3">
+                <Label>Insert into</Label>
+                {uniqueDayNames.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueDayNames.map((name) => (
+                      <Button
+                        key={name}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => toggleDayNameAcrossWeeks(name)}
+                      >
+                        Toggle every &ldquo;{name}&rdquo;
+                      </Button>
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-2 max-h-64 overflow-y-auto rounded-md border p-3">
+                  {program.weeks.map((week, weekIndex) => (
+                    <div key={weekIndex} className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Week {week.week_number}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {week.days.map((day, dayIndex) => {
+                          const slotKey = `${weekIndex}:${dayIndex}`;
+                          const checked = adding.slots.has(slotKey);
+                          return (
+                            <label
+                              key={slotKey}
+                              className={`flex items-center gap-2 px-2 py-1 rounded border text-sm cursor-pointer transition-colors ${
+                                checked
+                                  ? "bg-primary/10 border-primary"
+                                  : "bg-muted/30"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  toggleSlot(weekIndex, dayIndex)
+                                }
+                              />
+                              {day.name}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {adding.slots.size} day
+                  {adding.slots.size === 1 ? "" : "s"} selected
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdding(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAdd}>Add to Selected Days</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -912,6 +1483,13 @@ export default function EditProgramPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Manage Exercises (cross-day) */}
+      <ManageTemplatesCard
+        program={program}
+        onChange={setProgram}
+        sbsLiftKeys={sbsLiftKeys}
+      />
 
       {/* Weeks */}
       <div className="space-y-4">

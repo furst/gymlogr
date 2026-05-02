@@ -24,7 +24,8 @@ export interface RegularExerciseTargets {
 }
 
 export interface ExerciseDefinition {
-  id?: string; // Auto-generated on upload if not provided
+  id?: string; // Auto-generated on upload if not provided. Unique per instance.
+  templateId?: string; // Shared across instances of the "same" exercise across days. Backfilled by name on upload.
   name: string;
   type: "sbs" | "regular";
   sbs_config?: SBSConfig;

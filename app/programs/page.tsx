@@ -37,13 +37,14 @@ import {
 import type { Program } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { validateProgram, validateLiftKeys } from "@/lib/validation";
+import { backfillTemplateIds } from "@/lib/exercise-templates";
 
 function generateExerciseId(): string {
   return `ex_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
 function processProgram(program: Program): Program {
-  return {
+  const withIds: Program = {
     ...program,
     weeks: program.weeks.map((week) => ({
       ...week,
@@ -56,6 +57,7 @@ function processProgram(program: Program): Program {
       })),
     })),
   };
+  return backfillTemplateIds(withIds);
 }
 
 export default function ProgramsPage() {
@@ -245,6 +247,7 @@ export default function ProgramsPage() {
               exercises: [
                 {
                   id: generateExerciseId(),
+                  templateId: `tpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
                   name: "Exercise 1",
                   type: "regular",
                   targets: {

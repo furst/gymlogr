@@ -23,6 +23,7 @@ const SBSConfigSchema = z.object({
 const ExerciseDefinitionSchema = z
   .object({
     id: z.string().optional(),
+    templateId: z.string().optional(),
     name: z.string().min(1, "Exercise name is required"),
     type: z.enum(["sbs", "regular"], {
       message: "Exercise type must be 'sbs' or 'regular'",
